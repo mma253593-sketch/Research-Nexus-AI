@@ -162,18 +162,18 @@ export function CommandPalette({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4"
+      className="fixed inset-0 z-50 bg-[#0A0E12]/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-xl bg-[#FAF7F2] dark:bg-[#141A21] border border-stone-300 dark:border-stone-700 rounded-sm shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Command Palette"
       >
-        <div className="flex items-center px-4 border-b border-slate-200 dark:border-slate-800">
-          <Search className="w-4 h-4 text-slate-400 shrink-0 mr-3" />
+        <div className="flex items-center px-4 border-b border-stone-200 dark:border-stone-800">
+          <Search className="w-4 h-4 text-stone-400 shrink-0 mr-3" />
           <input
             ref={inputRef}
             type="text"
@@ -181,11 +181,11 @@ export function CommandPalette({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command, tool, or scientific concept..."
-            className="w-full py-3.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
+            className="w-full py-3.5 bg-transparent text-xs text-[#1F2421] dark:text-[#E8ECE9] placeholder:text-stone-400 focus:outline-none"
           />
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded"
+            className="p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-xs cursor-pointer"
             aria-label="Close command palette"
           >
             <X className="w-4 h-4" />
@@ -194,7 +194,7 @@ export function CommandPalette({
 
         <div className="max-h-80 overflow-y-auto p-2">
           {filteredItems.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-500">
+            <div className="py-8 text-center text-xs text-stone-500">
               No matching commands or scientific concepts found
             </div>
           ) : (
@@ -209,24 +209,24 @@ export function CommandPalette({
                     onClose();
                   }}
                   onMouseEnter={() => setSelectedIndex(index)}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-colors ${
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xs text-left transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      ? 'bg-[#1B4332]/10 dark:bg-[#52B788]/15 text-[#143628] dark:text-[#52B788]'
+                      : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/40'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+                    <div className="p-1.5 rounded-xs bg-stone-100 dark:bg-[#161C22] text-[#1B4332] dark:text-[#52B788] shrink-0 border border-stone-200 dark:border-stone-700">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{item.title}</p>
-                      <p className="text-[11px] text-slate-500 truncate">{item.subtitle}</p>
+                      <p className="text-xs font-semibold truncate font-serif">{item.title}</p>
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">{item.subtitle}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span className="text-[10px] text-slate-400">{item.category}</span>
-                    {isSelected && <ArrowRight className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
+                    <span className="text-[10px] font-mono text-stone-400">{item.category}</span>
+                    {isSelected && <ArrowRight className="w-3.5 h-3.5 text-[#1B4332] dark:text-[#52B788]" />}
                   </div>
                 </button>
               );
@@ -234,9 +234,9 @@ export function CommandPalette({
           )}
         </div>
 
-        <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/60 dark:bg-slate-900/60 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Navigate with <kbd className="px-1 py-0.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-[10px] font-mono">↑</kbd> <kbd className="px-1 py-0.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-[10px] font-mono">↓</kbd></span>
-          <span>Press <kbd className="px-1 py-0.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-[10px] font-mono">ESC</kbd> to exit</span>
+        <div className="px-4 py-2 border-t border-stone-200 dark:border-stone-800 bg-stone-100/50 dark:bg-[#11161B] flex items-center justify-between text-[11px] text-stone-500 font-mono">
+          <span>Navigate with <kbd className="px-1 py-0.5 border border-stone-300 dark:border-stone-700 rounded-xs bg-white dark:bg-[#161C22] text-[10px]">↑</kbd> <kbd className="px-1 py-0.5 border border-stone-300 dark:border-stone-700 rounded-xs bg-white dark:bg-[#161C22] text-[10px]">↓</kbd></span>
+          <span>Press <kbd className="px-1 py-0.5 border border-stone-300 dark:border-stone-700 rounded-xs bg-white dark:bg-[#161C22] text-[10px]">ESC</kbd> to exit</span>
         </div>
       </div>
     </div>

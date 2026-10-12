@@ -1,5 +1,6 @@
 import { ResearchProject, ScientificPaper, Hypothesis, ExperimentPlan } from '../types/research';
 import { initialProjects, samplePapers, sampleHypotheses, sampleExperiments } from '../data/mockData';
+import { resolveProjectImageUrl } from '../assets/images';
 
 const STORAGE_KEYS = {
   PROJECTS: 'nexus_research_projects_v1',
@@ -17,7 +18,12 @@ export function getStoredProjects(): ResearchProject[] {
       localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(initialProjects));
       return initialProjects;
     }
-    return JSON.parse(raw);
+    const parsed: ResearchProject[] = JSON.parse(raw);
+    // Ensure all stored image paths resolve to valid production assets
+    return parsed.map((p) => ({
+      ...p,
+      image: resolveProjectImageUrl(p.image)
+    }));
   } catch {
     return initialProjects;
   }

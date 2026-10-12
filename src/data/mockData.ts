@@ -1,4 +1,5 @@
 import { ResearchProject, ScientificPaper, Hypothesis, ExperimentPlan, GraphNode, GraphEdge } from '../types/research';
+import { SCIENTIFIC_IMAGES } from '../assets/images';
 
 export const initialProjects: ResearchProject[] = [
   {
@@ -11,7 +12,7 @@ export const initialProjects: ResearchProject[] = [
     tags: ['KRAS G12D', 'RTK Feedback', 'SOS1', 'PDAC'],
     createdAt: '2026-08-14',
     updatedAt: '2026-10-09',
-    image: '/src/assets/images/project_oncology_pathway_1791775717057.jpg',
+    image: SCIENTIFIC_IMAGES.oncologyPathway,
     hypothesesCount: 3,
     papersCount: 8,
     experimentsCount: 2,
@@ -66,7 +67,7 @@ export const initialProjects: ResearchProject[] = [
     tags: ['Perovskite Tandems', 'Halide Segregation', 'ISOS-L-1', 'Passivation'],
     createdAt: '2026-07-22',
     updatedAt: '2026-10-10',
-    image: '/src/assets/images/project_photovoltaic_perovskite_1791775728611.jpg',
+    image: SCIENTIFIC_IMAGES.photovoltaicPerovskite,
     hypothesesCount: 2,
     papersCount: 12,
     experimentsCount: 3,
@@ -118,7 +119,7 @@ export const initialProjects: ResearchProject[] = [
     tags: ['Synaptic Pruning', 'Microglia', 'Complement C1q', 'Tauopathy'],
     createdAt: '2026-09-10',
     updatedAt: '2026-10-11',
-    image: '/src/assets/images/project_neuro_synapse_1791775738823.jpg',
+    image: SCIENTIFIC_IMAGES.neuroSynapse,
     hypothesesCount: 2,
     papersCount: 15,
     experimentsCount: 1,

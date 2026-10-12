@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ResearchTimeline } from '../timeline/ResearchTimeline';
 import { useToast } from '../common/Toast';
+import { ScientificImage } from '../common/ScientificImage';
 
 interface WorkspaceProps {
   projects: ResearchProject[];
@@ -202,14 +203,14 @@ export function Workspace({
       {/* Compact Workspace Sidebar */}
       <aside className="w-full lg:w-64 shrink-0 space-y-4">
         {/* Project Selector Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm p-4 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 font-semibold">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
               Active Project
             </span>
             <button
               onClick={handleOpenCreate}
-              className="p-1 text-teal-600 dark:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-xs flex items-center gap-1 font-medium"
+              className="px-2 py-0.5 text-[#1B4332] dark:text-[#52B788] hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xs text-xs flex items-center gap-1 font-semibold transition-colors cursor-pointer"
               title="Create New Project"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -217,129 +218,129 @@ export function Workspace({
             </button>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 font-mono text-[11px] text-teal-600 dark:text-teal-400 font-semibold">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#1B4332] dark:text-[#52B788] font-semibold">
               <span>{activeProject.shortCode}</span>
-              <span className="text-slate-400">·</span>
-              <span className="text-slate-500 capitalize">{activeProject.domain}</span>
+              <span className="text-stone-300 dark:text-stone-700">·</span>
+              <span className="text-stone-600 dark:text-stone-400 capitalize">{activeProject.domain}</span>
             </div>
-            <h2 className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-snug">
+            <h2 className="font-serif text-sm font-semibold text-[#143628] dark:text-[#FAF7F2] leading-snug line-clamp-2">
               {activeProject.title}
             </h2>
           </div>
 
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+          <div className="pt-2.5 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between text-[11px]">
             <button
               onClick={() => handleOpenEdit(activeProject)}
-              className="text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 font-medium flex items-center gap-1"
+              className="text-stone-600 dark:text-stone-400 hover:text-[#143628] dark:hover:text-stone-200 font-medium flex items-center gap-1 cursor-pointer transition-colors"
             >
               <Edit3 className="w-3 h-3" />
-              <span>Edit Title / Stage</span>
+              <span>Edit Details</span>
             </button>
-            <span className="font-mono text-slate-400 text-[10px]">
-              Stage: {activeProject.currentStage}
+            <span className="font-mono text-stone-500 dark:text-stone-400 text-[10px] uppercase">
+              {activeProject.currentStage}
             </span>
           </div>
         </div>
 
         {/* Workspace Views Navigation */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2 shadow-xs space-y-1">
-          <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 px-3 py-1.5 block">
+        <div className="bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm p-2 shadow-xs space-y-1">
+          <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 px-3 py-1.5 block font-semibold">
             Workspace Hub
           </span>
 
           <button
             onClick={() => setSidebarTab('overview')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs font-medium transition-colors cursor-pointer ${
               sidebarTab === 'overview'
-                ? 'bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                ? 'bg-[#1B4332]/10 dark:bg-[#52B788]/15 text-[#143628] dark:text-[#52B788] font-semibold'
+                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-4 h-4 stroke-[1.75]" />
               <span>Overview & Progress</span>
             </div>
           </button>
 
           <button
             onClick={() => setSidebarTab('projects')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs font-medium transition-colors cursor-pointer ${
               sidebarTab === 'projects'
-                ? 'bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                ? 'bg-[#1B4332]/10 dark:bg-[#52B788]/15 text-[#143628] dark:text-[#52B788] font-semibold'
+                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <FolderKanban className="w-4 h-4" />
+              <FolderKanban className="w-4 h-4 stroke-[1.75]" />
               <span>All Research Projects</span>
             </div>
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
+            <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {projects.length}
             </span>
           </button>
 
-          <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 px-3 pt-3 pb-1 block">
+          <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 px-3 pt-3 pb-1 block font-semibold">
             Research Modules
           </span>
 
           <button
             onClick={() => onNavigateTab('graph')}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <Network className="w-4 h-4 text-sky-500" />
+              <Network className="w-4 h-4 text-[#1B4332] dark:text-[#52B788] stroke-[1.75]" />
               <span>Knowledge Graph</span>
             </div>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
           </button>
 
           <button
             onClick={() => onNavigateTab('hypotheses')}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <FlaskConical className="w-4 h-4 text-teal-500" />
+              <FlaskConical className="w-4 h-4 text-[#B45309] dark:text-[#F59E0B] stroke-[1.75]" />
               <span>Hypothesis Lab</span>
             </div>
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
+            <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {hypotheses.length}
             </span>
           </button>
 
           <button
             onClick={() => onNavigateTab('experiments')}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <TestTube2 className="w-4 h-4 text-amber-500" />
+              <TestTube2 className="w-4 h-4 text-[#1D4ED8] dark:text-[#60A5FA] stroke-[1.75]" />
               <span>Experiment Designer</span>
             </div>
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
+            <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {experiments.length}
             </span>
           </button>
 
           <button
             onClick={() => onNavigateTab('paper-analysis')}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <FileText className="w-4 h-4 text-indigo-500" />
+              <FileText className="w-4 h-4 text-stone-600 dark:text-stone-300 stroke-[1.75]" />
               <span>Paper Analysis</span>
             </div>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
           </button>
 
           <button
             onClick={() => onNavigateTab('saved-papers')}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xs text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <Bookmark className="w-4 h-4 text-rose-500" />
+              <Bookmark className="w-4 h-4 text-[#991B1B] dark:text-[#F87171] stroke-[1.75]" />
               <span>Saved Literature</span>
             </div>
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
+            <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {papers.length}
             </span>
           </button>
@@ -351,25 +352,25 @@ export function Workspace({
         {sidebarTab === 'overview' ? (
           <>
             {/* Project Banner Card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
-              <div className="p-6 space-y-3">
+            <div className="bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm overflow-hidden shadow-xs">
+              <div className="p-6 space-y-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
-                    <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="flex items-center gap-2 font-mono text-xs text-stone-500">
+                    <span className="px-2 py-0.5 rounded-xs bg-stone-100 dark:bg-stone-800 font-semibold text-[#143628] dark:text-[#52B788] border border-stone-200 dark:border-stone-700">
                       {activeProject.shortCode}
                     </span>
                     <span>·</span>
-                    <span>{activeProject.domain}</span>
+                    <span className="font-medium text-stone-700 dark:text-stone-300">{activeProject.domain}</span>
                     <span>·</span>
-                    <span>Created {activeProject.createdAt}</span>
+                    <span>Registered {activeProject.createdAt}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400">Current Stage:</span>
+                    <span className="text-xs font-mono text-stone-500">Workflow Stage:</span>
                     <select
                       value={activeProject.currentStage}
                       onChange={(e) => handleStageChange(e.target.value as ResearchStage)}
-                      className="px-2 py-1 text-xs font-semibold bg-stone-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200"
+                      className="px-2.5 py-1 text-xs font-semibold bg-stone-50 dark:bg-[#161C22] border border-stone-300 dark:border-stone-700 rounded-xs text-[#143628] dark:text-[#52B788] focus:outline-none focus:ring-1 focus:ring-[#1B4332]"
                     >
                       <option value="question">1. Question</option>
                       <option value="literature">2. Literature</option>
@@ -380,42 +381,42 @@ export function Workspace({
                   </div>
                 </div>
 
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                <h1 className="font-serif text-xl sm:text-2xl font-normal text-[#143628] dark:text-[#FAF7F2] leading-snug">
                   {activeProject.title}
                 </h1>
 
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-sans max-w-4xl">
                   {activeProject.description}
                 </p>
 
                 {/* Tags */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-500">
-                  <span className="text-[11px] font-mono text-slate-400">Keywords:</span>
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-stone-500">
+                  <span className="text-[11px] font-mono text-stone-400 uppercase tracking-wider">Descriptors:</span>
                   {activeProject.tags.map((tag, i) => (
-                    <span key={i} className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                      {tag}{i < activeProject.tags.length - 1 ? ' ·' : ''}
+                    <span key={i} className="text-[11px] font-mono text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-xs">
+                      {tag}
                     </span>
                   ))}
                 </div>
               </div>
 
               {/* Quick Metrics Bar */}
-              <div className="grid grid-cols-3 border-t border-slate-100 dark:border-slate-800 bg-stone-50/50 dark:bg-slate-950/40 text-center py-3 text-xs">
+              <div className="grid grid-cols-3 border-t border-stone-200 dark:border-stone-800 bg-stone-50/70 dark:bg-[#11161B] text-center py-3.5 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Hypotheses</span>
-                  <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-widest block font-medium">Hypotheses</span>
+                  <span className="font-mono text-lg font-bold text-[#143628] dark:text-[#FAF7F2] tabular-nums">
                     {hypotheses.length}
                   </span>
                 </div>
-                <div className="border-x border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Experiments</span>
-                  <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                <div className="border-x border-stone-200 dark:border-stone-800">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-widest block font-medium">Protocols</span>
+                  <span className="font-mono text-lg font-bold text-[#143628] dark:text-[#FAF7F2] tabular-nums">
                     {experiments.length}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Cited Literature</span>
-                  <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-widest block font-medium">Primary Literature</span>
+                  <span className="font-mono text-lg font-bold text-[#143628] dark:text-[#FAF7F2] tabular-nums">
                     {papers.length}
                   </span>
                 </div>
@@ -432,48 +433,48 @@ export function Workspace({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div 
                 onClick={() => onNavigateTab('graph')}
-                className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-teal-500/50 cursor-pointer transition-all shadow-xs group"
+                className="p-4 bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm hover:border-[#1B4332] dark:hover:border-[#52B788] cursor-pointer transition-all shadow-xs group"
               >
-                <div className="flex items-center justify-between text-teal-600 dark:text-teal-400 mb-2">
-                  <Network className="w-4 h-4" />
+                <div className="flex items-center justify-between text-[#1B4332] dark:text-[#52B788] mb-2">
+                  <Network className="w-4 h-4 stroke-[1.75]" />
                   <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Interactive Knowledge Graph
+                <h3 className="font-serif text-sm font-semibold text-[#143628] dark:text-[#FAF7F2]">
+                  Knowledge Graph
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
                   Inspect molecular interactions, targets, compounds, and pathways.
                 </p>
               </div>
 
               <div 
                 onClick={() => onNavigateTab('hypotheses')}
-                className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-teal-500/50 cursor-pointer transition-all shadow-xs group"
+                className="p-4 bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm hover:border-[#B45309] dark:hover:border-[#F59E0B] cursor-pointer transition-all shadow-xs group"
               >
-                <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-2">
-                  <FlaskConical className="w-4 h-4" />
+                <div className="flex items-center justify-between text-[#B45309] dark:text-[#F59E0B] mb-2">
+                  <FlaskConical className="w-4 h-4 stroke-[1.75]" />
                   <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="font-serif text-sm font-semibold text-[#143628] dark:text-[#FAF7F2]">
                   Hypothesis Formulation
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
                   Compare supporting vs contradicting evidence balance sheets.
                 </p>
               </div>
 
               <div 
                 onClick={() => onNavigateTab('experiments')}
-                className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-teal-500/50 cursor-pointer transition-all shadow-xs group"
+                className="p-4 bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm hover:border-[#1D4ED8] dark:hover:border-[#60A5FA] cursor-pointer transition-all shadow-xs group"
               >
-                <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-2">
-                  <TestTube2 className="w-4 h-4" />
+                <div className="flex items-center justify-between text-[#1D4ED8] dark:text-[#60A5FA] mb-2">
+                  <TestTube2 className="w-4 h-4 stroke-[1.75]" />
                   <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Experiment Protocol Designer
+                <h3 className="font-serif text-sm font-semibold text-[#143628] dark:text-[#FAF7F2]">
+                  Protocol Designer
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
                   Structure independent, dependent, and controlled variables.
                 </p>
               </div>
@@ -482,96 +483,112 @@ export function Workspace({
         ) : (
           /* Projects Management Hub */
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-300 dark:border-stone-800">
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  Local Demonstration Projects
+                <h2 className="font-serif text-lg font-normal text-[#143628] dark:text-[#FAF7F2]">
+                  Local Research Projects
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
                   Manage independent scientific investigations, change stages, or formulate new scopes.
                 </p>
               </div>
               <button
                 onClick={handleOpenCreate}
-                className="px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-teal-600 dark:hover:bg-teal-500 rounded-md transition-colors flex items-center gap-1.5 shadow-xs"
+                className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Initialize Project</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {projects.map((proj) => {
                 const isSelected = activeProject.id === proj.id;
                 return (
                   <div
                     key={proj.id}
-                    className={`bg-white dark:bg-slate-900 border rounded-xl p-5 space-y-3.5 shadow-xs transition-all ${
+                    className={`bg-white dark:bg-[#161C22] border rounded-xs overflow-hidden shadow-xs transition-all flex flex-col justify-between ${
                       isSelected
-                        ? 'border-teal-500 ring-1 ring-teal-500/30'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'border-[#1B4332] dark:border-[#52B788] ring-1 ring-[#1B4332]/30'
+                        : 'border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-700'
                     }`}
                   >
-                    <div className="flex items-center justify-between text-xs font-mono text-slate-500">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-teal-600 dark:text-teal-400">
-                          {proj.shortCode}
-                        </span>
-                        <span>·</span>
-                        <span>{proj.domain}</span>
+                    <div>
+                      {proj.image && (
+                        <div className="relative border-b border-stone-200 dark:border-stone-800">
+                          <ScientificImage
+                            src={proj.image}
+                            alt={proj.title}
+                            aspectRatioClass="aspect-16/9"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-xs bg-[#0F1E2E]/90 text-[10px] font-mono text-white font-medium border border-stone-600/40">
+                            {proj.shortCode}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-mono text-stone-500">
+                          <span className="font-semibold text-[#1B4332] dark:text-[#52B788]">
+                            {proj.domain}
+                          </span>
+                          <span className="capitalize px-2 py-0.5 rounded-xs bg-stone-100 dark:bg-stone-800 text-[10px] font-medium text-stone-700 dark:text-stone-300">
+                            Stage: {proj.currentStage}
+                          </span>
+                        </div>
+
+                        <h3 className="font-serif text-sm font-semibold text-stone-900 dark:text-stone-100 line-clamp-2">
+                          {proj.title}
+                        </h3>
+
+                        <p className="text-xs text-stone-600 dark:text-stone-400 line-clamp-2 leading-relaxed font-sans">
+                          {proj.description}
+                        </p>
                       </div>
-                      <span className="capitalize px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300">
-                        {proj.currentStage}
-                      </span>
                     </div>
 
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-2">
-                      {proj.title}
-                    </h3>
+                    <div className="p-4 pt-0">
+                      <div className="pt-2.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          {isSelected ? (
+                            <span className="text-[#1B4332] dark:text-[#52B788] font-medium text-[11px] flex items-center gap-1 font-sans">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Active Investigation</span>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                onSelectProject(proj.id);
+                                showToast({
+                                  type: 'info',
+                                  title: 'Project Activated',
+                                  message: proj.title
+                                });
+                              }}
+                              className="text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-medium font-sans cursor-pointer"
+                            >
+                              Set as Active
+                            </button>
+                          )}
+                        </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {proj.description}
-                    </p>
-
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        {isSelected ? (
-                          <span className="text-teal-600 dark:text-teal-400 font-medium text-[11px] flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Currently Active</span>
-                          </span>
-                        ) : (
+                        <div className="flex items-center gap-1.5">
                           <button
-                            onClick={() => {
-                              onSelectProject(proj.id);
-                              showToast({
-                                type: 'info',
-                                title: 'Project Activated',
-                                message: proj.title
-                              });
-                            }}
-                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
+                            onClick={() => handleOpenEdit(proj)}
+                            className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded cursor-pointer"
+                            title="Edit Project"
                           >
-                            Set as Active
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleOpenEdit(proj)}
-                          className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded"
-                          title="Edit Project"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setProjectToDelete(proj)}
-                          className="p-1.5 text-rose-400 hover:text-rose-600 rounded"
-                          title="Delete Project"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <button
+                            onClick={() => setProjectToDelete(proj)}
+                            className="p-1.5 text-rose-400 hover:text-rose-600 rounded cursor-pointer"
+                            title="Delete Project"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -585,27 +602,32 @@ export function Workspace({
       {/* Modal: Initialize New Project */}
       {isCreateModalOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#0A0E12]/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setIsCreateModalOpen(false)}
           role="dialog"
           aria-modal="true"
         >
           <div 
-            className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-6"
+            className="w-full max-w-lg bg-[#FAF7F2] dark:bg-[#141A21] border border-stone-300 dark:border-stone-700 rounded-sm shadow-xl overflow-hidden p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Initialize Research Project
-              </h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-300 dark:border-stone-800">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
+                  Investigation Protocol
+                </span>
+                <h3 className="font-serif text-base font-normal text-[#143628] dark:text-[#FAF7F2] mt-0.5">
+                  Initialize Research Project
+                </h3>
+              </div>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="py-4 space-y-4 text-xs">
+            <form onSubmit={handleCreateSubmit} className="py-4 space-y-4 text-xs font-sans">
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                   Project Title *
                 </label>
                 <input
@@ -614,30 +636,30 @@ export function Workspace({
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g., Targeted Degradation of Tau Oligomers via PROTACs"
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs focus:ring-1 focus:ring-teal-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                     Short Identifier
                   </label>
                   <input
                     type="text"
                     value={formShortCode}
                     onChange={(e) => setFormShortCode(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs font-mono"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs font-mono focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                     Scientific Domain
                   </label>
                   <select
                     value={formDomain}
                     onChange={(e) => setFormDomain(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                   >
                     <option value="Molecular Oncology">Molecular Oncology</option>
                     <option value="Materials Science">Materials Science</option>
@@ -649,7 +671,7 @@ export function Workspace({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                   Research Description & Scope
                 </label>
                 <textarea
@@ -657,18 +679,18 @@ export function Workspace({
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Summarize the core scientific problem, known mechanisms, and targets..."
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs leading-relaxed"
+                  className="w-full p-2.5 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs leading-relaxed focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                   Starting Workflow Stage
                 </label>
                 <select
                   value={formStage}
                   onChange={(e) => setFormStage(e.target.value as ResearchStage)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                 >
                   <option value="question">1. Research Question</option>
                   <option value="literature">2. Literature Review</option>
@@ -678,17 +700,17 @@ export function Workspace({
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5">
+              <div className="pt-3 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-md"
+                  className="px-3 py-1.5 text-xs text-stone-600 dark:text-stone-400 bg-stone-200/60 dark:bg-stone-800 hover:bg-stone-200 rounded-xs cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-teal-600 dark:hover:bg-teal-500 rounded-md shadow-xs"
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs shadow-xs cursor-pointer transition-colors"
                 >
                   Create Project
                 </button>
@@ -701,27 +723,32 @@ export function Workspace({
       {/* Modal: Edit Existing Project */}
       {isEditModalOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#0A0E12]/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setIsEditModalOpen(false)}
           role="dialog"
           aria-modal="true"
         >
           <div 
-            className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-6"
+            className="w-full max-w-lg bg-[#FAF7F2] dark:bg-[#141A21] border border-stone-300 dark:border-stone-700 rounded-sm shadow-xl overflow-hidden p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Edit Research Project
-              </h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-300 dark:border-stone-800">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
+                  Record Modification
+                </span>
+                <h3 className="font-serif text-base font-normal text-[#143628] dark:text-[#FAF7F2] mt-0.5">
+                  Edit Research Project
+                </h3>
+              </div>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="py-4 space-y-4 text-xs">
+            <form onSubmit={handleEditSubmit} className="py-4 space-y-4 text-xs font-sans">
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                   Project Title *
                 </label>
                 <input
@@ -729,30 +756,30 @@ export function Workspace({
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                     Short Code
                   </label>
                   <input
                     type="text"
                     value={formShortCode}
                     onChange={(e) => setFormShortCode(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs font-mono"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs font-mono focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                     Research Stage
                   </label>
                   <select
                     value={formStage}
                     onChange={(e) => setFormStage(e.target.value as ResearchStage)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                   >
                     <option value="question">1. Question</option>
                     <option value="literature">2. Literature</option>
@@ -764,28 +791,28 @@ export function Workspace({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="font-medium text-stone-700 dark:text-stone-300 block mb-1">
                   Description
                 </label>
                 <textarea
                   rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 text-xs leading-relaxed"
+                  className="w-full p-2.5 bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] text-xs leading-relaxed focus:ring-1 focus:ring-[#1B4332] focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5">
+              <div className="pt-3 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-md"
+                  className="px-3 py-1.5 text-xs text-stone-600 dark:text-stone-400 bg-stone-200/60 dark:bg-stone-800 hover:bg-stone-200 rounded-xs cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-teal-600 dark:hover:bg-teal-500 rounded-md shadow-xs"
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs shadow-xs cursor-pointer transition-colors"
                 >
                   Save Changes
                 </button>
@@ -798,34 +825,34 @@ export function Workspace({
       {/* Confirmation Modal: Delete Project */}
       {projectToDelete && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#0A0E12]/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setProjectToDelete(null)}
           role="dialog"
           aria-modal="true"
         >
           <div 
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-5 space-y-4"
+            className="w-full max-w-md bg-[#FAF7F2] dark:bg-[#141A21] border border-stone-300 dark:border-stone-700 rounded-sm shadow-xl p-5 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 text-rose-600">
+            <div className="flex items-center gap-3 text-[#991B1B]">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="font-serif text-sm font-semibold text-[#143628] dark:text-[#FAF7F2]">
                 Confirm Project Deletion
               </h3>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed font-sans">
               Are you sure you want to permanently delete <strong>"{projectToDelete.title}"</strong> ({projectToDelete.shortCode})? Associated demonstration stage records will be removed.
             </p>
             <div className="pt-2 flex justify-end gap-2.5">
               <button
                 onClick={() => setProjectToDelete(null)}
-                className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-md"
+                className="px-3 py-1.5 text-xs text-stone-600 dark:text-stone-400 bg-stone-200/60 dark:bg-stone-800 hover:bg-stone-200 rounded-xs cursor-pointer transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-md shadow-xs"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-xs shadow-xs cursor-pointer transition-colors"
               >
                 Delete Project
               </button>

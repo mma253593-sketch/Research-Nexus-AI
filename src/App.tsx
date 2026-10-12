@@ -261,7 +261,7 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-[#FAF7F2] dark:bg-[#0D1217] text-[#1F2421] dark:text-[#E8ECE9] transition-colors">
       {/* Strict 3-Zone Navigation Header */}
       <Navbar
         currentView={currentView}
@@ -298,16 +298,19 @@ function MainApp() {
 
         {currentView === 'graph' && (
           <div className="space-y-4 max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-300 dark:border-stone-800">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-medium">
+                  Relational Network Engine · Causal Pathways
+                </span>
+                <h1 className="text-2xl font-serif font-normal tracking-tight text-[#143628] dark:text-[#FAF7F2] mt-0.5">
                   Interactive Scientific Knowledge Graph
                 </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
                   Explore causal mechanisms, molecular targets, compounds, and verified pathway relationships.
                 </p>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">
+              <span className="text-[11px] font-mono text-stone-500 dark:text-stone-400">
                 Drag nodes to reposition · Pan and zoom · Click for evidence inspection
               </span>
             </div>
