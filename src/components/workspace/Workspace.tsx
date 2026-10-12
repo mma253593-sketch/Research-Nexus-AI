@@ -8,6 +8,7 @@ import {
 import { ResearchTimeline } from '../timeline/ResearchTimeline';
 import { useToast } from '../common/Toast';
 import { ScientificImage } from '../common/ScientificImage';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface WorkspaceProps {
   projects: ResearchProject[];
@@ -33,6 +34,9 @@ export function Workspace({
   papers
 }: WorkspaceProps) {
   const { showToast } = useToast();
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [sidebarTab, setSidebarTab] = useState<'overview' | 'projects'>('overview');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -246,7 +250,7 @@ export function Workspace({
         {/* Workspace Views Navigation */}
         <div className="bg-white dark:bg-[#141A21] border border-stone-300 dark:border-stone-800 rounded-sm p-2 shadow-xs space-y-1">
           <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 px-3 py-1.5 block font-semibold">
-            Workspace Hub
+            {isTh ? 'ศูนย์กลางพื้นที่ทำงาน' : 'Workspace Hub'}
           </span>
 
           <button
@@ -259,7 +263,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <LayoutDashboard className="w-4 h-4 stroke-[1.75]" />
-              <span>Overview & Progress</span>
+              <span>{isTh ? 'ภาพรวมและความคืบหน้า' : 'Overview & Progress'}</span>
             </div>
           </button>
 
@@ -273,7 +277,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <FolderKanban className="w-4 h-4 stroke-[1.75]" />
-              <span>All Research Projects</span>
+              <span>{isTh ? 'โครงการวิจัยทั้งหมด' : 'All Research Projects'}</span>
             </div>
             <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {projects.length}
@@ -281,7 +285,7 @@ export function Workspace({
           </button>
 
           <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 px-3 pt-3 pb-1 block font-semibold">
-            Research Modules
+            {isTh ? 'โมดูลการวิจัย' : 'Research Modules'}
           </span>
 
           <button
@@ -290,7 +294,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <Network className="w-4 h-4 text-[#1B4332] dark:text-[#52B788] stroke-[1.75]" />
-              <span>Knowledge Graph</span>
+              <span>{isTh ? 'กราฟความรู้ (Graph)' : 'Knowledge Graph'}</span>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
           </button>
@@ -301,7 +305,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <FlaskConical className="w-4 h-4 text-[#B45309] dark:text-[#F59E0B] stroke-[1.75]" />
-              <span>Hypothesis Lab</span>
+              <span>{isTh ? 'ห้องทดลองสมมติฐาน' : 'Hypothesis Lab'}</span>
             </div>
             <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {hypotheses.length}
@@ -314,7 +318,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <TestTube2 className="w-4 h-4 text-[#1D4ED8] dark:text-[#60A5FA] stroke-[1.75]" />
-              <span>Experiment Designer</span>
+              <span>{isTh ? 'ออกแบบการทดลอง' : 'Experiment Designer'}</span>
             </div>
             <span className="font-mono text-[10px] text-stone-400 tabular-nums">
               {experiments.length}
@@ -327,7 +331,7 @@ export function Workspace({
           >
             <div className="flex items-center gap-2.5">
               <FileText className="w-4 h-4 text-stone-600 dark:text-stone-300 stroke-[1.75]" />
-              <span>Paper Analysis</span>
+              <span>{isTh ? 'วิเคราะห์บทความวิจัย' : 'Paper Analysis'}</span>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
           </button>

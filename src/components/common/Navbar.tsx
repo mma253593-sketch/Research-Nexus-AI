@@ -1,5 +1,6 @@
-import { Search, Sun, Moon, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Search, Sun, Moon, Menu, X, ArrowUpRight, Languages } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface NavbarProps {
   currentView: string;
@@ -17,18 +18,19 @@ export function Navbar({
   onOpenCommandPalette
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const navLinks = [
-    { id: 'workspace', label: 'Workspace' },
-    { id: 'graph', label: 'Knowledge Graph' },
-    { id: 'hypotheses', label: 'Hypothesis Lab' },
-    { id: 'experiments', label: 'Experiment Designer' },
-    { id: 'paper-analysis', label: 'Paper Analysis' }
+    { id: 'workspace', label: t('nav.workspace', 'Workspace') },
+    { id: 'graph', label: t('nav.graph', 'Knowledge Graph') },
+    { id: 'hypotheses', label: t('nav.hypotheses', 'Hypothesis Lab') },
+    { id: 'experiments', label: t('nav.experiments', 'Experiment Designer') },
+    { id: 'paper-analysis', label: t('nav.paperAnalysis', 'Paper Analysis') }
   ];
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 dark:bg-[#11161B]/95 backdrop-blur-md border-b border-stone-300 dark:border-stone-800 transition-colors">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-8 px-4 sm:px-6 lg:px-8 h-15">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-6 px-4 sm:px-6 lg:px-8 h-15">
         {/* Zone 1: Brand Wordmark (Single text element) */}
         <button
           onClick={() => {
@@ -42,7 +44,7 @@ export function Navbar({
         </button>
 
         {/* Zone 2: 4-5 single-line clean navigation links */}
-        <nav className="hidden lg:flex items-center gap-7 text-xs font-medium text-stone-600 dark:text-stone-300">
+        <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-stone-600 dark:text-stone-300">
           {navLinks.map((link) => {
             const isActive = currentView === link.id;
             return (
@@ -62,7 +64,33 @@ export function Navbar({
         </nav>
 
         {/* Zone 3: 1 Primary Action + Quick Utilities */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Language Switcher Button (TH / EN) */}
+          <div className="flex items-center bg-stone-200/60 dark:bg-stone-800 rounded-xs p-0.5 border border-stone-300 dark:border-stone-700 text-[11px] font-mono">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-1.5 py-0.5 rounded-xs transition-colors cursor-pointer ${
+                language === 'en'
+                  ? 'bg-white dark:bg-[#161C22] text-[#143628] dark:text-[#FAF7F2] font-semibold shadow-2xs'
+                  : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-300'
+              }`}
+              title="English"
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage('th')}
+              className={`px-1.5 py-0.5 rounded-xs transition-colors cursor-pointer flex items-center gap-1 ${
+                language === 'th'
+                  ? 'bg-[#1B4332] text-white font-semibold shadow-2xs'
+                  : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-300'
+              }`}
+              title="ภาษาไทย (Thai)"
+            >
+              <span>ไทย</span>
+            </button>
+          </div>
+
           <button
             onClick={onOpenCommandPalette}
             className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 text-xs text-stone-500 dark:text-stone-400 bg-white/70 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xs hover:border-stone-400 dark:hover:border-stone-700 transition-colors cursor-pointer"
@@ -85,7 +113,7 @@ export function Navbar({
               onClick={() => onNavigate('workspace')}
               className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors whitespace-nowrap shrink-0 shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Workspace</span>
+              <span>{t('nav.workspace', 'Workspace')}</span>
               <ArrowUpRight className="w-3.5 h-3.5 opacity-80" />
             </button>
           ) : (
@@ -93,7 +121,7 @@ export function Navbar({
               onClick={() => onNavigate('home')}
               className="px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-stone-300 dark:border-stone-700 rounded-xs hover:bg-stone-100 dark:hover:bg-stone-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Overview
+              {t('nav.overview', 'Overview')}
             </button>
           )}
 
@@ -127,7 +155,7 @@ export function Navbar({
             </button>
           ))}
           <div className="pt-2 border-t border-stone-200 dark:border-stone-800 flex justify-between items-center px-3">
-            <span className="text-[11px] text-stone-400 font-mono">Quick Search</span>
+            <span className="text-[11px] text-stone-400 font-mono">{t('nav.quickSearch', 'Quick Search')}</span>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -135,7 +163,7 @@ export function Navbar({
               }}
               className="text-xs text-[#1B4332] dark:text-[#52B788] font-medium cursor-pointer"
             >
-              Open Command Palette (⌘K)
+              {t('nav.openPalette', 'Open Command Palette (⌘K)')}
             </button>
           </div>
         </div>

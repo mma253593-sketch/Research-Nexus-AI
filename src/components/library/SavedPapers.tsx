@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScientificPaper } from '../../types/research';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Bookmark, Search, Copy, Download, ExternalLink, 
   Trash2, FileText, Check, ChevronRight, BookOpen
@@ -14,6 +15,9 @@ interface SavedPapersProps {
 
 export function SavedPapers({ papers, onOpenAnalysis, onDeletePaper }: SavedPapersProps) {
   const { showToast } = useToast();
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [search, setSearch] = useState('');
   const [selectedPaper, setSelectedPaper] = useState<ScientificPaper | null>(papers[0] || null);
 
@@ -64,16 +68,16 @@ export function SavedPapers({ papers, onOpenAnalysis, onDeletePaper }: SavedPape
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-300 dark:border-stone-800">
         <div>
           <span className="text-[11px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
-            Scholarly Archive · Grounded References
+            {t('lib.badge', 'Scholarly Archive · Grounded References')}
           </span>
           <h1 className="font-serif text-2xl font-normal text-[#143628] dark:text-[#FAF7F2] flex items-center gap-2 mt-0.5">
-            <span>Saved Literature & Bibliographic Archive</span>
+            <span>{t('lib.title', 'Saved Literature & Bibliographic Archive')}</span>
             <span className="text-xs font-mono font-normal text-stone-500 dark:text-stone-400">
-              ({papers.length} Articles)
+              ({papers.length} {isTh ? 'บทความ' : 'Articles'})
             </span>
           </h1>
           <p className="text-xs text-stone-600 dark:text-stone-400 mt-1 font-sans">
-            Grounded scholarly corpus with structured metadata, DOIs, and instant BibTeX citation export.
+            {t('lib.description', 'Grounded scholarly corpus with structured metadata, DOIs, and instant BibTeX citation export.')}
           </p>
         </div>
 
@@ -83,7 +87,7 @@ export function SavedPapers({ papers, onOpenAnalysis, onDeletePaper }: SavedPape
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search papers, authors, DOIs..."
+            placeholder={isTh ? "ค้นหาบทความ, ผู้วิจัย, รหัส DOI..." : "Search papers, authors, DOIs..."}
             className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-[#11161B] border border-stone-300 dark:border-stone-700 rounded-xs text-[#1F2421] dark:text-[#E8ECE9] placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#1B4332]"
           />
         </div>

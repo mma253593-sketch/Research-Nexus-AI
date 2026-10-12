@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { X, ExternalLink, ShieldCheck, BookOpen, Mail, Info, FileSpreadsheet } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function Footer() {
   const [activeModal, setActiveModal] = useState<'about' | 'docs' | 'privacy' | 'contact' | null>(null);
+  const { t, language } = useLanguage();
 
   return (
     <>
@@ -16,7 +18,9 @@ export function Footer() {
               </p>
             </div>
             <p className="text-[12px] text-stone-500 max-w-md font-sans">
-              Scientific research platform for structured hypothesis formulation, literature decomposition, and reproducible experiment architecture.
+              {language === 'th'
+                ? 'แพลตฟอร์มการวิจัยทางวิทยาศาสตร์สำหรับการตั้งสมมติฐานเชิงโครงสร้าง การย่อยเอกสารวิจัย และสถาปัตยกรรมการทดลองที่ทำซ้ำได้'
+                : 'Scientific research platform for structured hypothesis formulation, literature decomposition, and reproducible experiment architecture.'}
             </p>
           </div>
 
@@ -25,30 +29,30 @@ export function Footer() {
               onClick={() => setActiveModal('about')}
               className="hover:text-stone-900 dark:hover:text-stone-200 transition-colors cursor-pointer"
             >
-              Editorial Constitution
+              {t('footer.constitution', 'Editorial Constitution')}
             </button>
             <button
               onClick={() => setActiveModal('docs')}
               className="hover:text-stone-900 dark:hover:text-stone-200 transition-colors cursor-pointer"
             >
-              Methodology & Protocols
+              {t('footer.methodology', 'Methodology & Protocols')}
             </button>
             <button
               onClick={() => setActiveModal('privacy')}
               className="hover:text-stone-900 dark:hover:text-stone-200 transition-colors cursor-pointer"
             >
-              Data Ethics & Provenance
+              {t('footer.privacy', 'Data Ethics & Provenance')}
             </button>
             <button
               onClick={() => setActiveModal('contact')}
               className="hover:text-stone-900 dark:hover:text-stone-200 transition-colors cursor-pointer"
             >
-              Academic Inquiries
+              {t('footer.contact', 'Academic Inquiries')}
             </button>
           </div>
 
           <div className="text-[11px] text-stone-400 font-mono">
-            <span>Open Science Architecture · Version 4.2</span>
+            <span>{t('footer.version', 'Open Science Architecture · Version 4.2')}</span>
           </div>
         </div>
       </footer>

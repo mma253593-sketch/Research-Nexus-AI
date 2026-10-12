@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExperimentPlan } from '../../types/research';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   TestTube2, Plus, Trash2, AlertTriangle, CheckCircle2, 
   FileText, Download, Copy, Printer, Sliders, ShieldAlert,
@@ -21,6 +22,9 @@ export function ExperimentDesigner({
   initialHypothesisTitle
 }: ExperimentDesignerProps) {
   const { showToast } = useToast();
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [selectedExperiment, setSelectedExperiment] = useState<ExperimentPlan>(experiments[0]);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -229,13 +233,13 @@ ${p.alternativeExplanations.map(a => `- ${a}`).join('\n')}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-300 dark:border-stone-800">
         <div>
           <span className="text-[11px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
-            Empirical Architecture · Protocol Specifications
+            {t('exp.badge', 'Empirical Architecture · Protocol Specifications')}
           </span>
           <h1 className="font-serif text-2xl font-normal text-[#143628] dark:text-[#FAF7F2] flex items-center gap-2 mt-0.5">
-            <span>Experiment Designer & Protocol Architecture</span>
+            <span>{t('exp.title', 'Experiment Designer & Protocol Architecture')}</span>
           </h1>
           <p className="text-xs text-stone-600 dark:text-stone-400 mt-1 font-sans">
-            Parameterize independent, dependent, and controlled variables into structured, reproducible protocols with automated rigor checks.
+            {t('exp.description', 'Parameterize independent, dependent, and controlled variables into structured, reproducible protocols with automated rigor checks.')}
           </p>
         </div>
 
@@ -245,7 +249,7 @@ ${p.alternativeExplanations.map(a => `- ${a}`).join('\n')}
             className="px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700 rounded-xs hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 stroke-[1.75]" />
-            <span>Export Protocol</span>
+            <span>{t('exp.exportProtocol', 'Export Protocol')}</span>
           </button>
           
           <button
@@ -256,7 +260,7 @@ ${p.alternativeExplanations.map(a => `- ${a}`).join('\n')}
                 : 'text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800'
             }`}
           >
-            {isEditing ? 'Cancel Editing' : 'Edit Parameters'}
+            {isEditing ? t('exp.cancelEditing', 'Cancel Editing') : t('exp.editParameters', 'Edit Parameters')}
           </button>
 
           <button
@@ -264,7 +268,7 @@ ${p.alternativeExplanations.map(a => `- ${a}`).join('\n')}
             className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>New Protocol</span>
+            <span>{t('exp.newProtocol', 'New Protocol')}</span>
           </button>
         </div>
       </div>

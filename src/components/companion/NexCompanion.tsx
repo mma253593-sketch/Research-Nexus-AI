@@ -4,6 +4,7 @@ import {
   NexContextInfo, NexLanguage 
 } from './types';
 import { getLocalized } from './nexLocalization';
+import { useLanguage } from '../../context/LanguageContext';
 import { NexCharacter } from './NexCharacter';
 import { NexSpeechBubble } from './NexSpeechBubble';
 import { NexChatPanel } from './NexChatPanel';
@@ -27,6 +28,8 @@ export function NexCompanion({
   onNavigateView,
   appEvent
 }: NexCompanionProps) {
+  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage();
+
   // Preferences State
   const [preferences, setPreferences] = useState<NexPreferences>(() => {
     try {
@@ -39,10 +42,17 @@ export function NexCompanion({
       voiceEnabled: false,
       autoGreetings: true,
       scale: 1.0,
-      language: 'en',
+      language: (globalLanguage as NexLanguage) || 'en',
       savedPosition: null
     };
   });
+
+  // Keep Nex language in sync when user changes language via Navbar
+  useEffect(() => {
+    if (preferences.language !== globalLanguage) {
+      setPreferences(prev => ({ ...prev, language: globalLanguage as NexLanguage }));
+    }
+  }, [globalLanguage]);
 
   // Position State
   const [position, setPosition] = useState<NexPosition>(() => {

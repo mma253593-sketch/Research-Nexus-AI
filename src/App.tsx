@@ -20,12 +20,15 @@ import { HypothesisLab } from './components/hypothesis/HypothesisLab';
 import { ExperimentDesigner } from './components/experiment/ExperimentDesigner';
 import { SavedPapers } from './components/library/SavedPapers';
 import { NexCompanion } from './components/companion/NexCompanion';
+import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
   return (
-    <ToastProvider>
-      <MainApp />
-    </ToastProvider>
+    <LanguageProvider>
+      <ToastProvider>
+        <MainApp />
+      </ToastProvider>
+    </LanguageProvider>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Hypothesis, EvidenceItem } from '../../types/research';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   FlaskConical, Plus, Trash2, Edit3, ArrowLeftRight, CheckCircle2, 
   AlertCircle, HelpCircle, FileText, ChevronDown, ChevronUp, Copy,
@@ -23,6 +24,9 @@ export function HypothesisLab({
   activeProjectId
 }: HypothesisLabProps) {
   const { showToast } = useToast();
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [editingHypothesis, setEditingHypothesis] = useState<Hypothesis | null>(null);
@@ -168,16 +172,16 @@ ${h.suggestedTests.map(t => `- ${t}`).join('\n')}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-300 dark:border-stone-800">
         <div>
           <span className="text-[11px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
-            Mechanistic Inquiry · Evidence Balance Ledger
+            {t('hypo.badge', 'Mechanistic Inquiry · Evidence Balance Ledger')}
           </span>
           <h1 className="font-serif text-2xl font-normal text-[#143628] dark:text-[#FAF7F2] flex items-center gap-2 mt-0.5">
-            <span>Hypothesis Lab</span>
+            <span>{t('hypo.title', 'Hypothesis Lab')}</span>
             <span className="text-xs font-mono font-normal text-stone-500 dark:text-stone-400">
-              ({hypotheses.length} Active Records)
+              ({hypotheses.length} {isTh ? 'รายการ' : 'Active Records'})
             </span>
           </h1>
           <p className="text-xs text-stone-600 dark:text-stone-400 mt-1 font-sans">
-            Formulate, validate, and compare competing scientific explanations using structured evidence balance sheets.
+            {t('hypo.description', 'Formulate, validate, and compare competing scientific explanations using structured evidence balance sheets.')}
           </p>
         </div>
 
@@ -188,7 +192,7 @@ ${h.suggestedTests.map(t => `- ${t}`).join('\n')}
             title="Export Markdown"
           >
             <Download className="w-3.5 h-3.5 stroke-[1.75]" />
-            <span>Export Markdown</span>
+            <span>{t('hypo.exportMarkdown', 'Export Markdown')}</span>
           </button>
 
           <button
@@ -205,7 +209,7 @@ ${h.suggestedTests.map(t => `- ${t}`).join('\n')}
             }`}
           >
             <ArrowLeftRight className="w-3.5 h-3.5 stroke-[1.75]" />
-            <span>{isCompareMode ? 'Exit Comparison' : 'Compare Hypotheses'}</span>
+            <span>{isCompareMode ? t('hypo.exitComparison', 'Exit Comparison') : t('hypo.compareHypotheses', 'Compare Hypotheses')}</span>
           </button>
 
           <button
@@ -213,7 +217,7 @@ ${h.suggestedTests.map(t => `- ${t}`).join('\n')}
             className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Formulate Hypothesis</span>
+            <span>{t('hypo.formulate', 'Formulate Hypothesis')}</span>
           </button>
         </div>
       </div>

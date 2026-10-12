@@ -3,6 +3,7 @@ import { sampleResearchQuestions } from '../../data/mockData';
 import { ResearchProject } from '../../types/research';
 import { SCIENTIFIC_IMAGES } from '../../assets/images';
 import { ScientificImage } from '../common/ScientificImage';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Search, ArrowRight, Network, BookOpen, 
   FlaskConical, TestTube2, BarChart2, ArrowUpRight,
@@ -22,43 +23,52 @@ export function Homepage({
   onSelectProject,
   projects
 }: HomepageProps) {
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeWorkflowIndex, setActiveWorkflowIndex] = useState(0);
+
+  const thaiSampleQuestions = [
+    'กลไกการดื้อยาของ KRAS G12D ผ่านการกระตุ้นซ้ำของ SOS1 และ RTK feedback เป็นอย่างไร?',
+    'อะไรคือกลไกการสลายตัวของเพอรอฟสไกต์แบบทริปเปิลแคตไอออนภายใต้อุณหภูมิและความชื้นสูง?',
+    'จุลชีพในลำไส้ปรับการทำงานของไมโครเกลียและสภาพแวดล้อมระบบประสาทผ่านโมเลกุลใด?'
+  ];
+
+  const questionsToDisplay = language === 'th' ? thaiSampleQuestions : sampleResearchQuestions.slice(0, 3);
 
   const workflowSteps = [
     {
       num: '01',
-      title: 'Question Parameterization',
-      subtitle: 'Isolate the causal or physical unknown',
-      desc: 'Define rigorous biological, chemical, or materials boundaries rather than loose speculation.',
+      title: t('workflow.step1.title', 'Question Parameterization'),
+      subtitle: t('workflow.step1.sub', 'Isolate the causal or physical unknown'),
+      desc: t('workflow.step1.desc', 'Define rigorous biological, chemical, or materials boundaries rather than loose speculation.'),
       icon: Search
     },
     {
       num: '02',
-      title: 'Literature Decomposition',
-      subtitle: 'Extract verbatim claims and evaluate potential biases',
-      desc: 'Dissect primary publications to separate verified observations from author interpretations.',
+      title: t('workflow.step2.title', 'Literature Decomposition'),
+      subtitle: t('workflow.step2.sub', 'Extract verbatim claims and evaluate potential biases'),
+      desc: t('workflow.step2.desc', 'Dissect primary publications to separate verified observations from author interpretations.'),
       icon: BookOpen
     },
     {
       num: '03',
-      title: 'Hypothesis Formulation',
-      subtitle: 'Construct dual supporting and counter-evidence ledgers',
-      desc: 'Contrast competing mechanisms with explicit assumption auditing and calibrated confidence rationale.',
+      title: t('workflow.step3.title', 'Hypothesis Formulation'),
+      subtitle: t('workflow.step3.sub', 'Construct dual supporting and counter-evidence ledgers'),
+      desc: t('workflow.step3.desc', 'Contrast competing mechanisms with explicit assumption auditing and calibrated confidence rationale.'),
       icon: FlaskConical
     },
     {
       num: '04',
-      title: 'Experiment Architecture',
-      subtitle: 'Parameterize independent, dependent, and controlled variables',
-      desc: 'Structure reproducible lab protocols with pre-registered statistical evaluation criteria.',
+      title: t('workflow.step4.title', 'Experiment Architecture'),
+      subtitle: t('workflow.step4.sub', 'Parameterize independent, dependent, and controlled variables'),
+      desc: t('workflow.step4.desc', 'Structure reproducible lab protocols with pre-registered statistical evaluation criteria.'),
       icon: TestTube2
     },
     {
       num: '05',
-      title: 'Empirical Rigor & Review',
-      subtitle: 'Audit findings against criteria without data invention',
-      desc: 'Track stage milestones with power calculations (n ≥ 3) and combination indices.',
+      title: t('workflow.step5.title', 'Empirical Rigor & Review'),
+      subtitle: t('workflow.step5.sub', 'Audit findings against criteria without data invention'),
+      desc: t('workflow.step5.desc', 'Track stage milestones with power calculations (n ≥ 3) and combination indices.'),
       icon: BarChart2
     }
   ];
@@ -83,13 +93,13 @@ export function Homepage({
         {/* Editorial Masthead Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-8 border-b border-stone-300 dark:border-stone-800 text-[11px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#143628] dark:text-[#52B788]">Research Nexus</span>
+            <span className="font-semibold text-[#143628] dark:text-[#52B788]">{t('brand.name', 'Research Nexus')}</span>
             <span>·</span>
-            <span>Scientific Discovery System</span>
+            <span>{t('brand.tagline', 'Scientific Discovery System')}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline">Volume IV · Open Methodological Framework</span>
-            <span className="text-[#B45309] font-medium">Peer-Grounded Protocols</span>
+            <span className="hidden sm:inline">{t('brand.volume', 'Volume IV · Open Methodological Framework')}</span>
+            <span className="text-[#B45309] font-medium">{t('brand.protocols', 'Peer-Grounded Protocols')}</span>
           </div>
         </div>
 
@@ -98,13 +108,13 @@ export function Homepage({
           <div className="lg:col-span-7 space-y-7">
             <div className="space-y-4">
               <span className="inline-block text-xs font-mono font-medium tracking-widest uppercase text-[#B45309] dark:text-[#F59E0B]">
-                Hypothesis Engineering · Experiment Design · Concept Networks
+                {t('hero.badge', 'Hypothesis Engineering · Experiment Design · Concept Networks')}
               </span>
               <h1 className="font-serif text-4xl sm:text-6xl text-[#143628] dark:text-[#FAF7F2] font-normal tracking-tight leading-[1.08] text-balance">
-                Research beyond the obvious.
+                {t('hero.headline', 'Research beyond the obvious.')}
               </h1>
               <p className="text-base sm:text-lg text-stone-700 dark:text-stone-300 leading-relaxed font-sans max-w-2xl">
-                Explore scientific knowledge, investigate competing hypotheses, and turn unanswered questions into testable, reproducible research.
+                {t('hero.subtext', 'Explore scientific knowledge, investigate competing hypotheses, and turn unanswered questions into testable, reproducible research.')}
               </p>
             </div>
 
@@ -116,14 +126,14 @@ export function Homepage({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Enter a research question, target (KRAS G12D, Perovskite), or DOI..."
+                  placeholder={t('hero.searchPlaceholder', 'Enter a research question, target (KRAS G12D, Perovskite), or DOI...')}
                   className="w-full pl-10 pr-36 py-3.5 text-xs sm:text-sm bg-transparent text-[#1F2421] dark:text-[#E8ECE9] placeholder:text-stone-400 focus:outline-none font-sans"
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 px-4 py-2 text-xs font-medium text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors whitespace-nowrap"
+                  className="absolute right-1.5 px-4 py-2 text-xs font-medium text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors whitespace-nowrap cursor-pointer"
                 >
-                  Initiate Investigation
+                  {t('hero.startResearching', 'Initiate Investigation')}
                 </button>
               </div>
 
@@ -134,7 +144,7 @@ export function Homepage({
                   onClick={() => onStartResearching(searchQuery)}
                   className="px-5 py-2.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-all shadow-xs flex items-center gap-2 cursor-pointer"
                 >
-                  <span>Open Research Workspace</span>
+                  <span>{t('hero.startResearching', 'Open Research Workspace')}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <button
@@ -143,7 +153,7 @@ export function Homepage({
                   className="px-4 py-2.5 text-xs font-medium text-[#143628] dark:text-stone-200 hover:text-[#0E291E] bg-white dark:bg-[#1A222B] border border-stone-300 dark:border-stone-700 rounded-xs hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <Network className="w-3.5 h-3.5 text-[#1B4332] dark:text-[#52B788]" />
-                  <span>Inspect Knowledge Graph</span>
+                  <span>{t('hero.exploreKnowledge', 'Inspect Knowledge Graph')}</span>
                 </button>
               </div>
             </form>
@@ -151,10 +161,10 @@ export function Homepage({
             {/* Clickable Grounded Questions */}
             <div className="space-y-2 pt-2 border-t border-stone-200 dark:border-stone-800">
               <span className="text-[11px] font-mono text-stone-500 uppercase tracking-wider block">
-                Representative Inquiries:
+                {t('hero.exampleInquiries', 'Representative Inquiries:')}
               </span>
               <div className="flex flex-wrap gap-2">
-                {sampleResearchQuestions.slice(0, 3).map((question, idx) => (
+                {questionsToDisplay.map((question, idx) => (
                   <button
                     key={idx}
                     type="button"
@@ -185,7 +195,7 @@ export function Homepage({
                   <span>Isometric Knowledge Matrix</span>
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-400 font-sans leading-relaxed">
-                  Interconnected multi-scale concept network illustrating small-molecule binding, RTK feedback reactivation, and downstream transcriptional effectors.
+                  {t('hero.diagramCaption', 'Interconnected multi-scale concept network illustrating small-molecule binding, RTK feedback reactivation, and downstream transcriptional effectors.')}
                 </p>
                 <div className="pt-1 flex items-center justify-between text-[10px] font-mono text-stone-400">
                   <span>Source: Der et al. / Wang et al. 2023</span>
@@ -193,7 +203,7 @@ export function Homepage({
                     onClick={onExploreKnowledge}
                     className="text-[#1B4332] dark:text-[#52B788] hover:underline font-medium flex items-center gap-1 cursor-pointer"
                   >
-                    <span>Inspect Interactive Graph</span>
+                    <span>{t('hero.exploreKnowledge', 'Inspect Interactive Graph')}</span>
                     <ArrowUpRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -211,10 +221,10 @@ export function Homepage({
               Systematic Progression
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl text-[#143628] dark:text-[#FAF7F2] font-normal tracking-tight">
-              From exploratory inquiry to reproducible lab protocols
+              {t('workflow.title', 'From exploratory inquiry to reproducible lab protocols')}
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 max-w-2xl font-sans">
-              A disciplined, non-hallucinatory progression designed to prevent premature conclusions and uphold scientific rigor.
+              {t('workflow.subtitle', 'A disciplined, non-hallucinatory progression designed to prevent premature conclusions and uphold scientific rigor.')}
             </p>
           </div>
         </div>
@@ -265,10 +275,10 @@ export function Homepage({
               Empirical Exemplars
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl text-[#143628] dark:text-[#FAF7F2] font-normal tracking-tight">
-              Featured Research Investigations
+              {t('projects.title', 'Featured Research Investigations')}
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 font-sans">
-              Authentic multi-domain research records ready for immediate parameterization and hypothesis contrast.
+              {t('projects.subtitle', 'Authentic multi-domain research records ready for immediate parameterization and hypothesis contrast.')}
             </p>
           </div>
 
@@ -276,7 +286,7 @@ export function Homepage({
             onClick={() => onStartResearching()}
             className="text-xs font-medium text-[#1B4332] dark:text-[#52B788] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
           >
-            <span>Open All Projects in Workspace</span>
+            <span>{t('projects.openWorkspace', 'Open All Projects in Workspace')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -337,7 +347,7 @@ export function Homepage({
                       <span>{project.papersCount} Papers</span>
                     </div>
                     <div className="flex items-center gap-1 text-[#1B4332] dark:text-[#52B788] group-hover:translate-x-0.5 transition-transform">
-                      <span className="text-[11px] font-sans font-medium">Explore</span>
+                      <span className="text-[11px] font-sans font-medium">{t('projects.exploreInWorkspace', 'Explore')}</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -355,11 +365,13 @@ export function Homepage({
             <div className="flex items-center gap-2 text-[#1B4332] dark:text-[#52B788]">
               <FileCheck2 className="w-4 h-4 stroke-[1.75]" />
               <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-stone-900 dark:text-stone-100">
-                Primary Grounding
+                {language === 'th' ? 'แหล่งข้อมูลปฐมภูมิที่ผ่านการพิสูจน์' : 'Primary Grounding'}
               </h3>
             </div>
             <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed font-sans">
-              Explicit separation of author-extracted claims from exploratory AI synthesis. Zero hallucinated DOIs or fabricated citations.
+              {language === 'th' 
+                ? 'แยกแยะข้อความที่ยกมาจากผู้เขียนออกจากข้อสรุปของ AI อย่างชัดเจน ไม่มีการสร้างรหัส DOI เท็จหรือสร้างการอ้างอิงที่ไม่มีอยู่จริง'
+                : 'Explicit separation of author-extracted claims from exploratory AI synthesis. Zero hallucinated DOIs or fabricated citations.'}
             </p>
           </div>
 
@@ -367,11 +379,13 @@ export function Homepage({
             <div className="flex items-center gap-2 text-[#1B4332] dark:text-[#52B788]">
               <Binary className="w-4 h-4 stroke-[1.75]" />
               <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-stone-900 dark:text-stone-100">
-                Directional Relationships
+                {language === 'th' ? 'ความสัมพันธ์เชิงกลไกและทิศทาง' : 'Directional Relationships'}
               </h3>
             </div>
             <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed font-sans">
-              Knowledge graph connections represent mathematically parameterized allosteric inhibition, transactivation, and degradation rates.
+              {language === 'th'
+                ? 'เส้นเชื่อมโยงในกราฟความรู้แสดงถึงอัตราการยับยั้งเชิงอัลโลสเตอริก อัตราการแสดงออก และการสลายตัวที่ระบุพารามิเตอร์ได้อย่างชัดเจน'
+                : 'Knowledge graph connections represent mathematically parameterized allosteric inhibition, transactivation, and degradation rates.'}
             </p>
           </div>
 
@@ -379,11 +393,13 @@ export function Homepage({
             <div className="flex items-center gap-2 text-[#1B4332] dark:text-[#52B788]">
               <Compass className="w-4 h-4 stroke-[1.75]" />
               <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-stone-900 dark:text-stone-100">
-                Protocol Architecture
+                {language === 'th' ? 'สถาปัตยกรรมโปรโตคอลการทดลอง' : 'Protocol Architecture'}
               </h3>
             </div>
             <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed font-sans">
-              Experiments validate variables, replication bounds (n ≥ 3), and statistical tests before laboratory bench execution.
+              {language === 'th'
+                ? 'โปรโตคอลการทดลองตรวจสอบตัวแปร ขอบเขตการทำซ้ำ (n ≥ 3) และการทดสอบทางสถิติก่อนลงมือปฏิบัติการจริงในห้องแล็บ'
+                : 'Experiments validate variables, replication bounds (n ≥ 3), and statistical tests before laboratory bench execution.'}
             </p>
           </div>
         </div>

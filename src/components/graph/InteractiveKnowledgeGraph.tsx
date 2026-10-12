@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { sampleKnowledgeGraph } from '../../data/mockData';
 import { GraphNode, GraphEdge, ConceptCategory } from '../../types/research';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Search, ZoomIn, ZoomOut, RotateCcw, 
   ExternalLink, ArrowRight, BookOpen, 
@@ -27,6 +28,9 @@ export function InteractiveKnowledgeGraph({
   initialSelectedNodeId,
   compactMode = false
 }: InteractiveKnowledgeGraphProps) {
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [nodes, setNodes] = useState<GraphNode[]>(sampleKnowledgeGraph.nodes);
   const [edges] = useState<GraphEdge[]>(sampleKnowledgeGraph.edges);
   
@@ -231,13 +235,13 @@ export function InteractiveKnowledgeGraph({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter concepts (e.g., KRAS, SOS1, C1q)..."
+              placeholder={isTh ? "ค้นหาแนวคิด (เช่น KRAS, SOS1, Perovskite)..." : "Filter concepts (e.g., KRAS, SOS1, C1q)..."}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -249,31 +253,41 @@ export function InteractiveKnowledgeGraph({
         <div className="flex items-center gap-1 overflow-x-auto py-0.5">
           <button
             onClick={() => setCategoryFilter('ALL')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+            className={`px-2.5 py-1 text-xs font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer ${
               categoryFilter === 'ALL'
                 ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            All Nodes
+            {isTh ? 'ทุกโหนด' : 'All Nodes'}
           </button>
-          {(['Target', 'Pathway', 'Compound', 'Mechanism', 'Biomarker', 'Phenotype'] as ConceptCategory[]).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(categoryFilter === cat ? 'ALL' : cat)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                categoryFilter === cat
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <span 
-                className="w-1.5 h-1.5 rounded-full" 
-                style={{ backgroundColor: CATEGORY_COLORS[cat].fill }}
-              />
-              <span>{cat}</span>
-            </button>
-          ))}
+          {(['Target', 'Pathway', 'Compound', 'Mechanism', 'Biomarker', 'Phenotype'] as ConceptCategory[]).map((cat) => {
+            const thaiCatNames: Record<string, string> = {
+              Target: 'เป้าหมาย (Target)',
+              Pathway: 'วิถีส่งสัญญาณ (Pathway)',
+              Compound: 'สารประกอบ (Compound)',
+              Mechanism: 'กลไก (Mechanism)',
+              Biomarker: 'ตัวบ่งชี้ชีวภาพ (Biomarker)',
+              Phenotype: 'ฟีโนไทป์ (Phenotype)'
+            };
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(categoryFilter === cat ? 'ALL' : cat)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  categoryFilter === cat
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span 
+                  className="w-1.5 h-1.5 rounded-full" 
+                  style={{ backgroundColor: CATEGORY_COLORS[cat].fill }}
+                />
+                <span>{isTh ? thaiCatNames[cat] || cat : cat}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Graph Controls */}

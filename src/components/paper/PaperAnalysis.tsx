@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { samplePapers } from '../../data/mockData';
 import { ScientificPaper } from '../../types/research';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   FileText, Search, Sparkles, BookOpen, AlertTriangle, 
   HelpCircle, CheckCircle2, Copy, Bookmark, Send, ExternalLink,
@@ -15,6 +16,9 @@ interface PaperAnalysisProps {
 
 export function PaperAnalysis({ onSendToHypothesis, onSaveToLibrary }: PaperAnalysisProps) {
   const { showToast } = useToast();
+  const { language, t } = useLanguage();
+  const isTh = language === 'th';
+
   const [selectedPaper, setSelectedPaper] = useState<ScientificPaper>(samplePapers[0]);
   const [inputText, setInputText] = useState('');
   const [inputTitle, setInputTitle] = useState('');
@@ -124,13 +128,13 @@ export function PaperAnalysis({ onSendToHypothesis, onSaveToLibrary }: PaperAnal
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-300 dark:border-stone-800">
         <div>
           <span className="text-[11px] font-mono uppercase tracking-widest text-[#B45309] dark:text-[#F59E0B] font-semibold">
-            Literature Decomposition · Critical Appraisal
+            {t('paper.badge', 'Literature Decomposition · Critical Appraisal')}
           </span>
           <h1 className="font-serif text-2xl font-normal text-[#143628] dark:text-[#FAF7F2] flex items-center gap-2 mt-0.5">
-            <span>Paper Analysis & Evidence Extraction</span>
+            <span>{t('paper.title', 'Paper Analysis & Evidence Extraction')}</span>
           </h1>
           <p className="text-xs text-stone-600 dark:text-stone-400 mt-1 font-sans">
-            Systematic dissection of primary research questions, methodologies, findings, and potential biases with strict provenance tracking.
+            {t('paper.description', 'Systematic dissection of primary research questions, methodologies, findings, and potential biases with strict provenance tracking.')}
           </p>
         </div>
 
@@ -141,7 +145,7 @@ export function PaperAnalysis({ onSendToHypothesis, onSaveToLibrary }: PaperAnal
               className="px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700 rounded-xs hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Bookmark className="w-3.5 h-3.5 stroke-[1.75]" />
-              <span>Save to Library</span>
+              <span>{t('paper.saveToLibrary', 'Save to Library')}</span>
             </button>
           )}
           {onSendToHypothesis && (
@@ -150,7 +154,7 @@ export function PaperAnalysis({ onSendToHypothesis, onSaveToLibrary }: PaperAnal
               className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4332] hover:bg-[#143628] dark:bg-[#2D6A4F] dark:hover:bg-[#1B4332] rounded-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Bridge to Hypothesis Lab</span>
+              <span>{t('paper.bridgeToHypo', 'Bridge to Hypothesis Lab')}</span>
             </button>
           )}
         </div>
