@@ -1,6 +1,6 @@
 # ADR-0008: SKILLGRAPH lives in `skillgraph/`, isolated from Research Nexus AI
 
-Status: Proposed. Direction approved by the owner (D-1, 2026-11-23). **The two isolation edits to the existing app (§Decision 3) still require owner approval.**
+Status: **Superseded by [ADR-0011](0011-independent-repository.md)** (owner Decision 1, 2026-11-23: SKILLGRAPH gets its own repository). The two proposed edits to Research Nexus AI are **withdrawn** and won't be made. This record is kept for its measurements (baseline, coexistence conflicts).
 Date: 2026-11-23
 Supersedes: the root-level layout in ARCHITECTURE §16 (original Phase 0 version)
 

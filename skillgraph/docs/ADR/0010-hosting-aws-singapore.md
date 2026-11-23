@@ -1,7 +1,7 @@
 # ADR-0010: Production hosting on AWS `ap-southeast-1` (Singapore), portable by design
 
-Status: Proposed. Direction approved by the owner (D-5: global market, Singapore as initial primary region candidate). **Provider choice (A-7) requires owner approval**, as does validation of pricing and compliance.
-Date: 2026-11-23
+Status: **Accepted as preferred initial candidate** (owner Decision 4, 2026-11-23). **No paid infrastructure may be provisioned until the owner explicitly approves it** (U-7). The detailed cost breakdown, separating verified prices from assumptions, now lives in [COST_ESTIMATE.md](../COST_ESTIMATE.md) and **supersedes the cost section below**: NAT gateway, data transfer, monitoring, WAF, secrets, backups and staging are all priced there.
+Date: 2026-11-23 (revised)
 
 ## Context
 SKILLGRAPH targets a global market. Singapore is the owner's initial candidate primary region, subject to technical, pricing and compliance validation. The criteria are reliability, global latency, security, scalability, PostgreSQL support, object storage, operational complexity and actual cost. The architecture must stay portable for later regional expansion.
@@ -64,7 +64,7 @@ Source: AWS Price List bulk files for `ap-southeast-1`, publication date **2026-
 **Indicative total for pilot production + staging + IdP Pro: ≈ $560–615/month before discounts.** Development runs locally at $0.
 
 Notes:
-- Fargate tasks run in public subnets with public IPv4 addresses, and their security groups accept inbound traffic **only from the ALB**. This avoids a NAT gateway, which is hourly plus per-GB and wasn't in the price files parsed (cost **not verified**). RDS sits in private subnets with no public access.
+- Fargate tasks run in public subnets with public IPv4 addresses, and their security groups accept inbound traffic **only from the ALB**. This avoids a NAT gateway: $0.059/h + $0.059/GB, **verified** in the revised extract; the variant is costed in COST_ESTIMATE §2. RDS sits in private subnets with no public access.
 - The cost is dominated by Multi-AZ RDS. A pilot with no availability commitment could run Single-AZ (db.t4g.medium Single-AZ: 0.102/hour = $74.46), but the PRD §5 target of 99.5% favours Multi-AZ.
 - Production prices must be re-checked in the AWS Pricing Calculator at approval time. Commitment discounts are deliberately not assumed.
 

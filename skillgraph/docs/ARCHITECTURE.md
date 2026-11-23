@@ -1,9 +1,9 @@
 # SKILLGRAPH CORE — Architecture
 
-**Status:** Proposed (Phase 0), revised 2026-11-23 after owner decisions D-1, D-2, D-4 and D-5. Items marked *(D-n)* or *(A-n)* depend on an owner decision listed in `PHASE_0_PLAN.md`.
-**Related:** `DATA_MODEL.md`, `SECURITY.md`, `ADR/`, `PHASE_1_PLAN.md`.
+**Status:** Proposed (Phase 0). Revised 2026-11-23 (second review) after owner Decisions 1–7. Open items are marked *(U-n)* and listed in [`DECISIONS_AND_RISKS.md`](DECISIONS_AND_RISKS.md).
+**Related:** `DATA_MODEL.md`, `SECURITY.md`, `ADR/`, `PHASE_1_PLAN.md`, `IDP_COMPARISON.md`, `COST_ESTIMATE.md`, `PRIVACY_AND_DATA_TRANSFER.md`.
 
-**Scope note (ADR-0008).** SKILLGRAPH is a separate product inside `skillgraph/` in this repository. The repository root belongs to the existing **Research Nexus AI** app, which SKILLGRAPH must not change or depend on. All paths in this document are relative to `skillgraph/`.
+**Scope note (ADR-0011).** SKILLGRAPH is an **independent product in its own GitHub repository, `SKILLGRAPH`**. All paths in this document are relative to that repository's root. It has no code, configuration or dependency relationship with Research Nexus AI. Until the repository exists, these documents are held temporarily in `skillgraph/` on a side branch of Research-Nexus-AI (see `REPOSITORY_MIGRATION.md`).
 
 ---
 
@@ -14,7 +14,7 @@
  (browser)     │                                   │   (browser: org dashboards)
                ▼                                   ▼
         ┌────────────────────────────────────────────────┐        ┌──────────────────────────────┐
-        │  apps/web  (Next.js, server-rendered, i18n)    │◄──────►│ Managed OIDC provider (A-4)  │
+        │  apps/web  (Next.js, server-rendered, i18n)    │◄──────►│ Managed OIDC provider (U-5)  │
         └───────────────┬────────────────────────────────┘ login  │ sign-in, MFA, recovery,      │
                         │ same-origin /api/v1 (session cookie)    │ institution SSO              │
  External systems ──────┤ HTTPS /api/v1 (OAuth2 client-credentials└──────────────▲───────────────┘
@@ -52,7 +52,7 @@ Only the API process talks to PostgreSQL, object storage and the IdP's back-chan
 | Evidence | evidence_records, evidence_skills, evidence_files | Metadata, uploads, signed downloads, visibility |
 | Credential | credentials, credential_skills, credential_evidence, credential_status_events, credential_verifications | Registration, status machine, revocation, verification |
 | Consent | consent_grants | Grants, expiry, revocation, and the access-decision function used by other modules |
-| Developer API | api_clients, api_tokens | Client registration, secret rotation, client-credentials token endpoint, scopes |
+| Developer API | api_keys, api_key_secrets, api_access_tokens, api_key_usage_daily | SKILLGRAPH-issued API keys (ADR-0012): generation, HMAC-hashed secrets, scopes, expiry, rotation, revocation, usage tracking, per-key rate limits, client-credentials token endpoint (Phase 3) |
 | Audit | audit_logs | Append-only audit trail |
 | Platform | jobs (pg-boss schema), rate_limit_counters, idempotency_keys | Health, readiness, jobs, rate limiting, idempotency |
 | Billing | — | Not built before Phase 5 (PRD §29 rule) |
@@ -80,7 +80,7 @@ Every request passes through these steps in order:
 
 ## 4. Authentication design (summary; full detail in ADR-0009)
 
-The owner decided on a **managed OIDC identity provider** (D-4). The recommended provider is ZITADEL Cloud, with Amazon Cognito as runner-up; the final choice is A-4. SKILLGRAPH stores no passwords.
+The owner approved a **managed OIDC identity provider** (Decision 3). **The provider isn't selected yet**: ZITADEL Cloud vs Amazon Cognito, see `IDP_COMPARISON.md` (U-5). SKILLGRAPH stores no user passwords, and manages its own roles, permissions, organisations and API keys.
 
 - **Web login (backend-for-frontend):**
   - `GET /api/v1/auth/login` starts the OIDC Authorization Code flow with PKCE, `state` and `nonce`.
@@ -92,8 +92,16 @@ The owner decided on a **managed OIDC identity provider** (D-4). The recommended
 - **Logout:** local session revocation plus RP-initiated logout at the IdP. OIDC Back-Channel Logout ends SKILLGRAPH sessions when the IdP disables a user.
 - **Institution SSO:** configured per organisation at the IdP. SKILLGRAPH's organisation membership and roles remain authoritative and aren't stored in the IdP.
 - **Provider replaceability:** generic OIDC for login (issuer URL + client credentials). Provider-specific calls (delete user, fetch profile, provision SSO) sit behind one `IdentityProviderAdmin` adapter.
-- **API clients (machine-to-machine):** OAuth 2.0 client-credentials grant at `POST /api/v1/oauth/token`, issued by SKILLGRAPH's Developer API module (Phase 3). Client secrets are random, hashed, shown once and rotatable. Access tokens are opaque, last 15 min and are scope-bound. *(A-5: alternatively IdP-issued machine credentials.)*
-- **No fake authentication:** there is no development bypass. Automated tests use a real in-process OIDC server (`oidc-provider`) as a test-only fixture; development and staging use a real tenant of the chosen provider *(A-6)*.
+- **API keys (machine-to-machine), owner Decision 5, [ADR-0012](ADR/0012-api-keys.md):**
+  - Issued by SKILLGRAPH: `sgk_<env>_<keyId>.<secret>` with a 256-bit CSPRNG secret, stored as an HMAC-SHA-256 with a pepper held in Secrets Manager, and shown once.
+  - Bound to one organisation; uses a scope catalogue and can't escalate beyond the creator's permissions.
+  - Expiry is required. Rotation allows two active secrets with a grace period. Revocation is immediate.
+  - Usage is tracked daily, with per-key and per-organisation rate limits.
+  - Recommended use: OAuth 2.0 client-credentials exchange at `POST /api/v1/oauth/token` for 15-minute opaque tokens *(U-6a)*.
+- **No fake authentication (owner Decision 6):** there is no development bypass. Real OIDC integration tests run in isolated environments at three layers, described in ADR-0009 §11:
+  - L1: a real OIDC server in an ephemeral CI network;
+  - L2: a dedicated isolated test tenant at the chosen provider;
+  - L3: staging.
 
 ## 5. Authorization model
 
@@ -230,35 +238,58 @@ Background jobs use **pg-boss** (a PostgreSQL-backed queue; ADR-0006). Initial j
 - Components are accessible by construction: Radix-based primitives and visible focus. Every status label has text, not colour alone.
 - **Graph view:** React Flow (`@xyflow/react`) for the visual graph, with a **mandatory list/table alternative** of the same nodes and edges for keyboard and screen-reader users (WCAG 2.2 AA). The visual graph isn't accessible on its own.
 
-## 16. Repository structure (revised for D-1 / ADR-0008)
+## 16. Repository structure (independent `SKILLGRAPH` repository, ADR-0011)
 
-The repository root stays exactly as the Research Nexus AI app needs it. SKILLGRAPH is self-contained under `skillgraph/`. Folders are added when they gain content, not up front.
+Final structure of the `SKILLGRAPH` repository. Folders marked *(Phase n)* are created when they gain content, not up front.
 
 ```
-/                               ← Research Nexus AI (unchanged; npm; Vite; AI Studio)
-├── src/  public/  index.html  vite.config.ts  package.json  tsconfig.json  metadata.json  .env.example
-├── .github/workflows/          shared CI folder; one path-filtered workflow per product
-└── skillgraph/                 ← SKILLGRAPH (separate product, own pnpm workspace)
-    ├── apps/
-    │   ├── api/                NestJS: src/modules/*, src/platform/*, main.ts, worker.ts; test/
-    │   └── web/                Next.js app
-    ├── packages/
-    │   ├── contracts/          Zod schemas, DTO types, permission matrix, error codes
-    │   └── config/             eslint/tsconfig presets
-    ├── database/
-    │   ├── migrations/         numbered SQL migrations (forward-only, reviewed) — ADR-0003
-    │   └── seeds/demo/         demonstration data, clearly labelled, refused in production
-    ├── openapi/skillgraph-v1.yaml
-    ├── infra/                  OpenTofu/Terraform for AWS ap-southeast-1 (ADR-0010)
-    ├── tests/{e2e,security,load}/
-    ├── docs/                   PRD, ARCHITECTURE, DATA_MODEL, SECURITY, FEASIBILITY_REPORT, PHASE_0/1 plans, ADR/
-    ├── docker-compose.yml      postgres, minio, mailpit (developer machines / CI)
-    ├── .env.example            SKILLGRAPH-only variables (never the root .env)
-    ├── pnpm-workspace.yaml
-    └── package.json
+SKILLGRAPH/
+├── README.md                 project overview, local setup, links to docs
+├── .gitignore  .editorconfig  .nvmrc (Node 22)
+├── package.json              root scripts; "packageManager": "pnpm@10"
+├── pnpm-workspace.yaml       apps/*, packages/*
+├── pnpm-lock.yaml
+├── docker-compose.yml        postgres 16, minio, mailpit; developer machines and CI (Phase 1)
+├── .env.example              placeholders only, never real secrets
+├── .github/
+│   ├── workflows/            ci.yml (lint, typecheck, unit, integration on PostgreSQL 16 service);
+│   │                         oidc-integration.yml (L2 tests, nightly, protected Environment);
+│   │                         deploy.yml (Phase 1 M1.7, manual approval, AWS OIDC)
+│   ├── CODEOWNERS
+│   ├── dependabot.yml
+│   └── pull_request_template.md
+├── apps/
+│   ├── api/                  NestJS modular monolith: src/modules/*, src/platform/*, main.ts, worker.ts
+│   │   └── test/             unit, integration (real PostgreSQL), oidc/ (real OIDC server fixtures)
+│   └── web/                  Next.js (App Router), th/en
+├── packages/
+│   ├── contracts/            Zod schemas, DTO types, permission matrix, API scope catalogue, error codes
+│   └── config/               eslint and tsconfig presets, dependency-boundary rules
+├── database/
+│   ├── migrations/           NNNN_description.sql, forward-only, reviewed (ADR-0003)
+│   └── seeds/demo/           demonstration data, labelled, refused in production
+├── openapi/
+│   └── skillgraph-v1.yaml    OpenAPI 3.1 contract (D-7), validated in CI
+├── infra/                    OpenTofu for AWS ap-southeast-1. Validate/plan only until provisioning is approved
+├── scripts/
+│   └── cost/                 aws_cost_model.py (reproducible cost estimate)
+├── tests/
+│   ├── e2e/                  Playwright + axe (web + API)
+│   ├── security/             cross-tenant, authorization, auth negative, API-key tests
+│   └── load/                 Phase 4
+└── docs/
+    ├── PRD.md  ARCHITECTURE.md  DATA_MODEL.md  SECURITY.md  FEASIBILITY_REPORT.md
+    ├── PHASE_0_PLAN.md  PHASE_1_PLAN.md  DECISIONS_AND_RISKS.md
+    ├── IDP_COMPARISON.md  COST_ESTIMATE.md  PRIVACY_AND_DATA_TRANSFER.md  REPOSITORY_MIGRATION.md
+    ├── cost/                 price-list snapshot and generated cost tables
+    ├── migration/            commit-map.txt (old→new commit IDs, added after import)
+    └── ADR/                  0001–0012
 ```
 
-Coexistence requires two one-line edits to the Research Nexus config: `tsconfig.json` `exclude` and a Tailwind `@source not`. Both were tested and are pending owner approval *(A-1, ADR-0008)*. Without them, SKILLGRAPH code would break the Research Nexus type-check and leak CSS into its bundle.
+Repository settings (applied by the owner or with the owner's approval right after import; no cost):
+- branch protection on `main` (pull request required, CI must pass, no force-push);
+- GitHub secret scanning and push protection; Dependabot alerts;
+- Environments `oidc-integration`, `staging` and `production` with required reviewers; Actions OIDC for AWS (no stored cloud keys).
 
 Differences from PRD §9:
 
@@ -269,7 +300,7 @@ Differences from PRD §9:
 
 ## 17. Deployment topology and regional portability (ADR-0010)
 
-- **Primary cell:** AWS `ap-southeast-1` (Singapore) *(A-7)*.
+- **Primary cell:** AWS `ap-southeast-1` (Singapore), the preferred candidate (owner Decision 4). **Nothing is provisioned until the owner approves (U-7).** Costs: `COST_ESTIMATE.md`.
   - ALB (HTTPS, ACM certificate) → ECS Fargate services `web` and `api` (2 tasks each), plus `worker` (1 task).
   - RDS for PostgreSQL 16, Multi-AZ, private subnets, encrypted, with point-in-time recovery.
   - S3 private bucket (Block Public Access, SSE-KMS).

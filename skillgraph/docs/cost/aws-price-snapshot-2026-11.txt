@@ -1,0 +1,135 @@
+# AWS Price List extract — ap-southeast-1 (Singapore)
+# Source: https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/<offer>/current/... (public bulk price list)
+# Downloaded and parsed 2026-11-23 with scripts in the SKILLGRAPH Phase 0 session. On-demand USD list prices.
+# Lines are copied from the parser output; publicationDate per offer is shown in '#' lines.
+
+== Fargate (Linux) ==
+APS1-Fargate-GB-Hours                    0.00553000 USD/hours
+APS1-Fargate-ARM-GB-Hours                0.00442000 USD/hours
+APS1-Fargate-vCPU-Hours:perCPU           0.05056000 USD/hours
+APS1-Fargate-ARM-vCPU-Hours:perCPU       0.04045000 USD/hours
+== RDS for PostgreSQL (on-demand) ==
+db.m7g.large    Multi-AZ   0.4680 USD/hr  vcpu=2 mem=8 GiB
+db.m7g.large    Single-AZ  0.2340 USD/hr  vcpu=2 mem=8 GiB
+db.m8g.large    Multi-AZ   0.4680 USD/hr  vcpu=2 mem=8 GiB
+db.m8g.large    Single-AZ  0.2340 USD/hr  vcpu=2 mem=8 GiB
+db.t4g.medium   Multi-AZ   0.2030 USD/hr  vcpu=2 mem=4 GiB
+db.t4g.medium   Single-AZ  0.1020 USD/hr  vcpu=2 mem=4 GiB
+db.t4g.micro    Multi-AZ   0.0510 USD/hr  vcpu=2 mem=1 GiB
+db.t4g.micro    Single-AZ  0.0250 USD/hr  vcpu=2 mem=1 GiB
+db.t4g.small    Multi-AZ   0.1020 USD/hr  vcpu=2 mem=2 GiB
+db.t4g.small    Single-AZ  0.0510 USD/hr  vcpu=2 mem=2 GiB
+== RDS storage / backup ==
+Multi-AZ (SQL Server Mirror) 0.2760 USD/GB-Mo  $0.276 per GB-month of provisioned GP3 storage for Multi-AZ (SQL Server Mirror) deployment
+Multi-AZ (readable standbys) 0.4140 USD/GB-Mo  $0.414 per GB-month of provisioned GP3 storage Multi-AZ (readable standbys) deployments ru
+Single-AZ  0.0950 USD/GB-Mo  $0.095 per additional GB-month of backup storage exceeding free allocation running Postgre
+Single-AZ  0.1380 USD/GB-Mo  $0.138 per GB-month of provisioned GP3 storage running PostgreSQL
+Multi-AZ   0.2760 USD/GB-Mo  $0.276 per GB-month of provisioned GP3 storage for Multi-AZ deployments running PostgreSQL
+Multi-AZ   0.2760 USD/GB-Mo  $0.276 per GB-month of provisioned GP3 storage for Multi-AZ deployments
+-          0.0950 USD/GB-Mo  USD 0.095 per GB-Month of snapshot storage
+Single-AZ  0.1380 USD/GB-Mo  $0.138 per GB-month of provisioned GP3 storage
+Single-AZ  0.0950 USD/GB-Mo  USD 0.095 per GB-month of backup storage exceeding free allocation
+== S3 Standard storage / requests ==
+APS1-Requests-Tier2          0.00000040 USD/Requests range 0-Inf
+APS1-Requests-Tier1          0.00000500 USD/Requests range 0-Inf
+APS1-TimedStorage-ByteHrs    0.02500000 USD/GB-Mo range 0-51200
+APS1-TimedStorage-ByteHrs    0.02400000 USD/GB-Mo range 51200-512000
+APS1-TimedStorage-ByteHrs    0.02300000 USD/GB-Mo range 512000-Inf
+== Application Load Balancer ==
+APS1-LoadBalancerUsage       0.02520 USD/Hrs
+APS1-LCUUsage                0.00800 USD/LCU-Hrs
+== NAT Gateway / Public IPv4 ==
+APS1-PublicIPv4:InUseAddress     0.00500 USD/Hrs
+
+# AWSDataTransfer.json publicationDate=2026-11-19T10:58:41Z
+APS1-DataTransfer-Out-Bytes                   | GB           | 0.08000000 | 153600-Inf | $0.080 per GB - greater than 150 TB / month data transfer out
+APS1-DataTransfer-Out-Bytes                   | GB           | 0.08200000 | 51200-153600 | $0.082 per GB - next 100 TB / month data transfer out
+APS1-DataTransfer-Out-Bytes                   | GB           | 0.08500000 | 10240-51200 | $0.085 per GB - next 40 TB / month data transfer out
+APS1-DataTransfer-Out-Bytes                   | GB           | 0.12000000 | 0-10240 | $0.120 per GB - first 10 TB / month data transfer out beyond the global free tier
+APS1-DataTransfer-Regional-Bytes              | GB           | 0.01000000 | 0-Inf | $0.010 per GB - regional data transfer - in/out/between EC2 AZs or using elastic IPs or ELB
+# AmazonCloudWatch.json publicationDate=2026-11-19T17:10:40Z
+APS1-CW:AlarmMonitorUsage                     | Alarms       | 0.10000000 | 0-Inf | $0.10 per alarm metric month (standard resolution) - Asia Pacific (Singapore)
+APS1-CW:MetricMonitorUsage                    | Metrics      | 0.02000000 | 1000000-Inf | $0.02 per metric-month for over 1,000,000 metrics - Asia Pacific (Singapore)
+APS1-CW:MetricMonitorUsage                    | Metrics      | 0.05000000 | 250000-1000000 | $0.05 per metric-month for the next 750,000 metrics - Asia Pacific (Singapore)
+APS1-CW:MetricMonitorUsage                    | Metrics      | 0.10000000 | 10000-250000 | $0.10 per metric-month for the next 240,000 metrics - Asia Pacific (Singapore)
+APS1-CW:MetricMonitorUsage                    | Metrics      | 0.30000000 | 0-10000 | $0.30 per metric-month for the first 10,000 metrics - Asia Pacific (Singapore)
+APS1-CW:Requests                              | Requests     | 0.00001000 | 0-Inf | $0.01 per 1,000 requests
+APS1-DataProcessing-Bytes                     | GB           | 0.70000000 | 0-Inf | $0.70 per GB custom log data ingested in Standard log class - Asia Pacific (Singapore)
+APS1-TimedStorage-ByteHrs                     | GB-Mo        | 0.03000000 | 0-Inf | $0.03 per GB-mo of log storage - Asia Pacific (Singapore)
+# AWSSecretsManager.json publicationDate=2026-11-11T19:56:06Z
+APS1-AWSSecretsManager-Secret                 | Secrets      | 0.40000000 | 0-Inf | $0.40 per Secret
+APS1-AWSSecretsManagerAPIRequest              | API Requests | 0.00000500 | 0-Inf | $0.05 per 10000 API Requests
+# awskms.json publicationDate=2026-11-08T17:23:42Z
+# AmazonECR.json publicationDate=2026-11-13T16:39:47Z
+APS1-TimedStorage-Archive-ByteHrs             | GB-Mo        | 0.04000000 | 0-Inf | $0.04 per GB-Mo for TimedStorage-Archive-ByteHrs in Asia Pacific (Singapore)
+APS1-TimedStorage-ByteHrs                     | GB-Mo        | 0.10000000 | 0-Inf | $0.10 per GB-month of data storage
+# AmazonSES.json publicationDate=2026-11-04T17:41:09Z
+APS1-Recipients                               | Count        | 0.00010000 | 0-Inf | USD0.0001 per Count for Recipients:Send in Asia Pacific (Singapore)
+APS1-Recipients-DIP-Managed                   | Count        | 0.00000400 | 100000000-Inf | Dedicated IPs (managed) pricing for more than 100 Million emails per month in APS1
+APS1-Recipients-DIP-Managed                   | Count        | 0.00002000 | 50000000-100000000 | Dedicated IPs (managed) pricing for between 50 Million and 100 Million emails per month in APS1
+APS1-Recipients-DIP-Managed                   | Count        | 0.00004000 | 10000000-50000000 | Dedicated IPs (managed) pricing for between 10 Million and 50 Million emails per month in APS1
+APS1-Recipients-DIP-Managed                   | Count        | 0.00008000 | 0-10000000 | Dedicated IPs (managed) pricing for less than 10 Million emails per month in APS1
+APS1-Recipients-EC2                           | Count        | 0.00010000 | 0-Inf | USD0.0001 per Count for Recipients-EC2:Send in Asia Pacific (Singapore)
+APS1-Recipients-MailboxSim                    | Count        | 0.00010000 | 0-Inf | USD0.0001 per Count for Recipients-MailboxSim:Send in Asia Pacific (Singapore)
+APS1-Recipients-MailboxSim-EC2                | Count        | 0.00010000 | 0-Inf | USD0.0001 per Count for Recipients-MailboxSim-EC2:Send in Asia Pacific (Singapore)
+APS1-Recipients-MultiRegnEP                   | Count        | 0.00003000 | 0-Inf | $0.00003 per Count for Global Endpoint Message in Asia Pacific (Singapore)
+APS1-Recipients-Tenant                        | Count        | 0.00000500 | 0-Inf | $0.000005 per Count for Recipients-Tenant in Asia Pacific (Singapore)
+APS1-Recipients-Validation                    | Count        | 0.00001000 | 0-Inf | $0.00001 per Count for Recipients-Validation in Asia Pacific (Singapore)
+APS1-Recipients-Validation                    | Count        | 0.01000000 | 0-Inf | $0.01 per Count for Recipients-Validation in Asia Pacific (Singapore)
+APS1-Recipients-VirtDelivMgr                  | Count        | 0.00002000 | 100000000-Inf | $0.00002 per Count from 100,000,000 for Outbound emails processed by Virtual Deliverability Manager in Asia Pacific (Singapore)
+APS1-Recipients-VirtDelivMgr                  | Count        | 0.00005000 | 10000000-100000000 | $0.00005 per Count from 10,000,000 to 100,000,000 for Outbound emails processed by Virtual Deliverability Manager in Asia Pacific (Si
+APS1-Recipients-VirtDelivMgr                  | Count        | 0.00007000 | 0-10000000 | $0.00007 per Count from 0 to 10,000,000 for Outbound emails processed by Virtual Deliverability Manager in Asia Pacific (Singapore)
+# AmazonRoute53.json publicationDate=2026-11-18T19:15:48Z
+# awswaf.json publicationDate=2026-09-14T16:39:21Z
+APS1-Request                                  | Request      | 0.00000060 | 0-Inf | Price per HTTP request
+APS1-RequestV2-32KB                           | Request      | 0.00000030 | 0-Inf | $0.30 per million requests processed (32KB)
+APS1-RequestV2-48KB                           | Request      | 0.00000060 | 0-Inf | $0.60 per million requests processed (48KB)
+APS1-RequestV2-64KB                           | Request      | 0.00000090 | 0-Inf | $0.90 per million requests processed (64KB)
+APS1-RequestV2-Tier0                          | Request      | 0.00000060 | 0-Inf | $0.60 per million Request for Request Processed Tier0 in Asia Pacific (Singapore)
+APS1-RequestV2-Tier1                          | Request      | 0.00000060 | 0-Inf | $0.60 per million requests processed
+APS1-RequestV2-Tier2-2000WCU                  | Request      | 0.00000080 | 0-Inf | $0.80 per million requests processed
+APS1-RequestV2-Tier3-2500WCU                  | Request      | 0.00000100 | 0-Inf | $1.00 per million requests processed
+APS1-RequestV2-Tier4-3000WCU                  | Request      | 0.00000120 | 0-Inf | $1.20 per million requests processed
+APS1-RequestV2-Tier5-3500WCU                  | Request      | 0.00000140 | 0-Inf | $1.40 per million requests processed
+APS1-RequestV2-Tier6-4000WCU                  | Request      | 0.00000160 | 0-Inf | $1.60 per million requests processed
+APS1-RequestV2-Tier7-4500WCU                  | Request      | 0.00000180 | 0-Inf | $1.80 per million requests processed
+APS1-RequestV2-Tier8-5000WCU                  | Request      | 0.00000200 | 0-Inf | $2.00 per million requests processed
+APS1-Rule                                     | month        | 1.00000000 | 0-Inf | Price per Rule
+APS1-RuleV2                                   | Month        | 1.00000000 | 0-Inf | $1.00 per rule created (prorated hourly)
+APS1-WebACL                                   | month        | 5.00000000 | 0-Inf | Price per WebACL
+APS1-WebACLV2                                 | Month        | 5.00000000 | 0-Inf | $5.00 per web ACL created (prorated hourly)
+# AWSCloudTrail.json publicationDate=2026-11-02T17:20:09Z
+APS1-DataEventsRecorded                       | Events       | 0.00000100 | 0-Inf | 0.000001 per data event recorded in Asia Pacific (Singapore) region
+APS1-PaidEventsRecorded                       | Events       | 0.00002000 | 0-Inf | 0.00002 per paid event recorded in Asia Pacific (Singapore) region
+# AmazonRDS.json publicationDate=2026-11-20T22:46:19Z
+# awskms.json publicationDate=2026-11-08T17:23:42Z
+# AmazonRoute53.json publicationDate=2026-11-18T19:15:48Z
+APS1-DNS-Queries                              | Queries      | 0.00000020 | 1000000000-Inf | $0.20 per 1,000,000 resolver queries over 1 Billion queries
+APS1-DNS-Queries                              | Queries      | 0.00000040 | 0-1000000000 | $0.40 per 1,000,000 resolver queries for the first 1 Billion queries
+# AmazonRDS.json publicationDate=2026-11-20T22:46:19Z
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000024 | 1000000000-Inf | $0.00000024 per Aurora MySQL Data API request over 1B in Asia Pacific (Singapore)
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000024 | 1000000000-Inf | $0.00000024 per Aurora PostgreSQL Data API request over 1B in Asia Pacific (Singapore)
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000024 | 1000000000-Inf | $0.00000024 per Data API request over 1B in Asia Pacific (Singapore)
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000042 | 0-1000000000 | $0.00000042 per Aurora MySQL Data API request up to 1B in Asia Pacific (Singapore)
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000042 | 0-1000000000 | $0.00000042 per Aurora PostgreSQL Data API request up to 1B in Asia Pacific (Singapore)
+APS1-RDS:Data-API-Usage                       | API Calls    | 0.00000042 | 0-1000000000 | $0.00000042 per Data API request up to 1B in Asia Pacific (Singapore)
+APS1-RDS:GP3-PIOPS                            | IOPS-Mo      | 0.02400000 | 0-Inf | $0.024 per IOPS-month of provisioned GP3 IOPS
+APS1-RDS:GP3-PIOPS                            | IOPS-Mo      | 0.02400000 | 0-Inf | $0.024 per IOPS-month of provisioned GP3 IOPS running MariaDB
+APS1-RDS:GP3-PIOPS                            | IOPS-Mo      | 0.02400000 | 0-Inf | $0.024 per IOPS-month of provisioned GP3 IOPS running MySQL
+# AmazonEC2.json publicationDate=2026-11-21T00:48:16Z
+APS1-NatGateway-Bytes                         | GB           | 0.05900000 | 0-Inf | $0.059 per GB Data Processed by NAT Gateways
+APS1-NatGateway-Hours                         | Hrs          | 0.05900000 | 0-Inf | $0.059 per NAT Gateway Hour
+
+# AmazonCognito.json publicationDate=2026-11-19T18:39:22Z
+APS1-CUPM2MTokenRequestsFull                  | CognitoUserPools-M2MTokens | 0.00112500 | 5000000-Inf | USD 0.001125 per client credential flow (M2M) token request in tier 3  in Asia Pacific (Singapore)
+APS1-CUPM2MTokenRequestsFull                  | CognitoUserPools-M2MTokens | 0.00150000 | 250000-5000000 | USD 0.0015 per client credential flow (M2M) token request in tier 2  in Asia Pacific (Singapore)
+APS1-CUPM2MTokenRequestsFull                  | CognitoUserPools-M2MTokens | 0.00225000 | 0-250000 | USD 0.00225 per client credential flow (M2M) token request in tier 1  in Asia Pacific (Singapore)
+APS1-CognitoEnterpriseMAU                     | CognitoUserPoolsMAU | 0.01500000 | 0-Inf | Cognito User Pools ap-southeast-1 enterprise users tier 1 pricing
+APS1-CognitoEssentialsMAU                     | CognitoUserPoolsMAU | 0.01500000 | 0-Inf | Cognito Essentials ap-southeast-1 tier 1 pricing
+APS1-CognitoLiteMAU                           | CognitoUserPoolsMAU | 0.00250000 | 9990000-Inf | Cognito Lite ap-southeast-1 tier 4 pricing
+APS1-CognitoLiteMAU                           | CognitoUserPoolsMAU | 0.00325000 | 990000-9990000 | Cognito Lite ap-southeast-1 tier 3 pricing
+APS1-CognitoLiteMAU                           | CognitoUserPoolsMAU | 0.00460000 | 90000-990000 | Cognito Lite ap-southeast-1 tier 2 pricing
+APS1-CognitoLiteMAU                           | CognitoUserPoolsMAU | 0.00550000 | 0-90000 | Cognito Lite ap-southeast-1 tier 1 pricing
+APS1-CognitoPlusMAU                           | CognitoUserPoolsMAU | 0.02000000 | 0-Inf | Cognito Plus ap-southeast-1 tier 1 pricing
+Global-CognitoFreeTierMAU                     | CognitoUserPoolsMAU | 0.00000000 | 0-10000 | Cognito  global free tier pricing
+Globalv1-CognitoEnterpriseMAU                 | CognitoUserPoolsMAU | 0.00000000 | 0-50 | Cognito User Pools global enterprise users free tier pricing

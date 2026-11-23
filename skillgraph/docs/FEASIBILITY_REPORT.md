@@ -140,3 +140,15 @@ Conclusion: trigram search for Thai behaves identically under both locales, and 
 - AWS public price list for `ap-southeast-1` (publication 2026-11-20) was downloaded and parsed. Results are in ADR-0010. NAT gateway prices weren't in the parsed files and are **NOT VERIFIED**.
 - Library versions on npm at review: `openid-client` 6.9.1, `oidc-provider` 9.15.1, `kysely` 0.29.9, `kysely-codegen` 0.20.0, `pg` 8.23.1, `pg-boss` 12.39.0, `@nestjs/core` 12.6.0, `next` 16.4.6, `next-intl` 4.15.3, `@xyflow/react` 13.0.2, `zod` 4.6.7, `@aws-sdk/client-s3` 3.1175.0.
 - Identity provider and non-AWS hosting facts come from web research (sources in ADR-0009 and ADR-0010). **None of the providers was tested hands-on**; that's spike S-6, and it needs a provider account.
+
+---
+
+## 7. Addendum — second decision review, 2026-11-23
+
+| Check | Result |
+|---|---|
+| `SKILLGRAPH` repository visible to this session | **No.** A repository search for "skillgraph" returned an empty list. The owner must create it (REPOSITORY_MIGRATION §2) |
+| Research-Nexus-AI `main` | `c268948`, unchanged; no SKILLGRAPH commit ever merged |
+| History extraction dry run (`git-filter-repo` 2.47.0, throwaway clone) | 2 commits kept; only `docs/`; no Research Nexus paths; tree hashes identical to source (REPOSITORY_MIGRATION §4) |
+| AWS Price List bulk files, ap-southeast-1 | Downloaded and parsed: Cognito, Data Transfer, CloudWatch, Secrets Manager, ECR, SES, WAF, CloudTrail, EC2 (NAT gateway now **verified**: $0.059/h, $0.059/GB). KMS and Route 53 hosted-zone prices weren't found in usable form, so they're marked as assumptions |
+| Official vendor pages (`zitadel.com`, `aws.amazon.com`) | **Blocked by the environment's network policy** (proxy 403 / DNS failure). Vendor statements are taken from search results and labelled as such in IDP_COMPARISON.md |

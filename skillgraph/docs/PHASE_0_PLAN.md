@@ -31,7 +31,9 @@ No application code was written, and the existing "Research Nexus AI" code wasn'
 | D-5 | **Decided (direction)** | Global market; Singapore as initial candidate. **ADR-0010:** recommend AWS ap-southeast-1, cost estimated from the AWS price list. Pending (A-7) |
 | D-3, D-6–D-16 | Open | See §2 below; defaults for Phase 1 are proposed in `PHASE_1_PLAN.md` §2 |
 
-New approvals raised by this review (A-1 … A-8) are listed in `PHASE_1_PLAN.md` §1. **Phase 1 implementation doesn't start until the owner explicitly approves the finalized architecture.**
+New approvals raised by this review (A-1 … A-8) are listed in `PHASE_1_PLAN.md` §1.
+
+**Second review (2026-11-23):** owner Decisions 1–7 replace D-1/D-4/D-5 directions and A-1…A-8. SKILLGRAPH moves to its own repository (ADR-0011; A-1 and A-3 withdrawn). The IdP isn't finalized (U-5). API keys are SKILLGRAPH-issued (ADR-0012). AWS is the preferred candidate with no provisioning yet. The current open list is [`DECISIONS_AND_RISKS.md`](DECISIONS_AND_RISKS.md). **Phase 1 implementation doesn't start until the owner explicitly approves the finalized architecture.**
 
 ## 2. Decisions required from the product owner (original Phase 0 list)
 

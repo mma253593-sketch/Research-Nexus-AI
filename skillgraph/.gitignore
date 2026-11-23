@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets: never commit real values
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Infrastructure state (may contain secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl.bak
+
+# Local tooling
+.DS_Store
+*.log
+__pycache__/
+.venv/
+
+# Local object storage driver data (ADR-0005)
+.storage/

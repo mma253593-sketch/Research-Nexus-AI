@@ -1,16 +1,28 @@
 # SKILLGRAPH — Documentation
 
-SKILLGRAPH is a separate product that lives in `skillgraph/` in this repository. The repository root is the existing **Research Nexus AI** app, which SKILLGRAPH doesn't change or depend on (ADR-0008).
+**Status (2026-11-23, second review):** owner Decisions 1–7 recorded. **Awaiting owner approval of the new repository setup and the final architecture.** No application code exists; no cloud resources are provisioned.
 
-**Status (2026-11-23):** Phase 0 architecture revised after owner decisions D-1, D-2, D-4 and D-5. **Phase 1 is awaiting the owner's explicit approval.** No SKILLGRAPH application code exists yet.
-
+## Start here
 | Document | Purpose |
 |---|---|
-| [PHASE_1_PLAN.md](PHASE_1_PLAN.md) | **Start here:** approvals needed (A-1…A-8), defaults, milestones M1.0–M1.7, exit criteria |
-| [PRD.md](PRD.md) | Product requirements (owner's specification, source of truth) |
-| [FEASIBILITY_REPORT.md](FEASIBILITY_REPORT.md) | Measured environment facts; §6 covers the Research Nexus baseline, coexistence conflicts and the Thai locale test |
-| [PHASE_0_PLAN.md](PHASE_0_PLAN.md) | Phase 0 decisions (D-1…D-16) and their status |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Modules, request pipeline, OIDC authentication, authorization, tenancy/RLS, search, graph, storage, credentials, consent, deployment |
-| [DATA_MODEL.md](DATA_MODEL.md) | Proposed schema, including additions to the PRD model and why |
+| [DECISIONS_AND_RISKS.md](DECISIONS_AND_RISKS.md) | **Open decisions (U-1…U-10) and risks** |
+| [REPOSITORY_MIGRATION.md](REPOSITORY_MIGRATION.md) | What the owner must create and authorize; safe migration procedure; dry-run results |
+| [PHASE_1_PLAN.md](PHASE_1_PLAN.md) | Entry conditions, milestones M0–M1.7, exit criteria |
+
+## Decision support
+| Document | Purpose |
+|---|---|
+| [IDP_COMPARISON.md](IDP_COMPARISON.md) | ZITADEL Cloud vs Amazon Cognito: pricing, organisations, MFA, regions, migration, lock-in (evidence-labelled) |
+| [COST_ESTIMATE.md](COST_ESTIMATE.md) | AWS Singapore cost breakdown, separating verified prices from assumptions ([cost/](cost/)) |
+| [PRIVACY_AND_DATA_TRANSFER.md](PRIVACY_AND_DATA_TRANSFER.md) | PDPA and cross-border transfer requirements; pre-pilot legal gate |
+
+## Architecture and requirements
+| Document | Purpose |
+|---|---|
+| [PRD.md](PRD.md) | Product requirements (owner's specification) |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Modules, request pipeline, OIDC, API keys, authorization, RLS, search, graph, storage, credentials, consent, repository structure, deployment |
+| [DATA_MODEL.md](DATA_MODEL.md) | Proposed schema and additions to the PRD model |
 | [SECURITY.md](SECURITY.md) | Security baseline, OWASP API Top 10 control plan, known gaps |
-| [ADR/](ADR/README.md) | Architecture Decision Records 0001–0010 |
+| [ADR/](ADR/README.md) | Architecture Decision Records 0001–0012 |
+| [FEASIBILITY_REPORT.md](FEASIBILITY_REPORT.md) | Measured environment facts (§6–7: decision reviews) |
+| [PHASE_0_PLAN.md](PHASE_0_PLAN.md) | Original Phase 0 decisions (D-1…D-16) and status |

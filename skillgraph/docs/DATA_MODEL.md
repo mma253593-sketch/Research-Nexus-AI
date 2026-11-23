@@ -1,6 +1,6 @@
 # SKILLGRAPH CORE — Data Model
 
-**Status:** Proposed (Phase 0), revised 2026-11-23 for D-2 (Kysely + SQL migrations, accepted), D-4 (managed OIDC: no password tables) and D-5 (`home_region` for regional cells). Implemented as numbered SQL migrations in `skillgraph/database/migrations/` in Phase 1/2. Nothing in this document exists in a database yet.
+**Status:** Proposed (Phase 0). Revised 2026-11-23 for owner Decisions 2 (PostgreSQL + Kysely + SQL migrations), 3 (managed OIDC: no password tables), 4 (`home_region` for regional cells) and 5 (SKILLGRAPH API keys). Implemented as numbered SQL migrations in `database/migrations/` of the `SKILLGRAPH` repository in Phase 1–3. Nothing in this document exists in a database yet.
 
 Conventions:
 
@@ -199,11 +199,15 @@ PK(`credential_id`, `evidence_id`). FR-06 "evidence references".
 The PRD column `timestamp` is renamed to `occurred_at`, because `timestamp` is a SQL type name.
 Append-only enforcement: privileges plus a trigger (ARCHITECTURE §12). Indexes on (`resource_type`, `resource_id`), (`organization_id`, `occurred_at`) and (`actor_id`, `occurred_at`).
 
-### api_clients [PRD]
-`id`, `organization_id`, `client_name`, `client_identifier` (public, random, UNIQUE), `secret_hash` (Argon2id; the PRD's `hashed_secret_reference`), `secret_last4` (for display), `permitted_scopes text[]`, `status` (`active | revoked`), `created_by`, `created_at`, `last_used_at`, `secret_rotated_at`.
+### API keys [PRD `api_clients`, refined by ADR-0012, owner Decision 5]
+The PRD's `api_clients` is split so that a key can have two active secrets during rotation, and so usage can be tracked. Migrations land in Phase 3; the names are reserved now.
 
-### api_tokens [ADDED]
-`id`, `api_client_id`, `token_hash`, `scopes`, `expires_at` (≤ 15 min), `created_at`. Expired rows are purged by a job.
+- **api_keys:** `id`, `organization_id`, `name`, `key_id` (public, random, UNIQUE; the PRD's `client_identifier`), `environment` (`live | test`), `scopes text[]` (from the catalogue in `packages/contracts`), `status` (`active | revoked | expired`), `rate_limit_tier`, `created_by`, `created_at`, `expires_at` **NOT NULL**, `revoked_at`, `revoked_by`, `revocation_reason`, `last_used_at`.
+- **api_key_secrets:** `id`, `api_key_id`, `secret_hmac` (HMAC-SHA-256 with a pepper from Secrets Manager; the PRD's `hashed_secret_reference`), `pepper_version`, `last4`, `created_at`, `expires_at`, `revoked_at`. A trigger enforces at most 2 active secrets per key.
+- **api_access_tokens:** `token_hash` PK, `api_key_id`, `api_key_secret_id`, `scopes`, `expires_at` (≤ 15 min), `created_at`. Purged by a job. Revoking a key invalidates its tokens.
+- **api_key_usage_daily:** PK (`api_key_id`, `day`, `route_group`), `request_count`, `error_count`, `rate_limited_count`. Retained 13 months.
+
+Raw secrets are never stored and never returned after issuance (PRD §10).
 
 ### idempotency_keys [ADDED]
 `principal_id`, `key`, `request_hash`, `response_status`, `response_body jsonb`, `created_at`, `expires_at`. PK(`principal_id`, `key`). Used by `POST /credentials`, `POST /evidence`, `POST /organizations` and `POST /developer/api-clients` (PRD §17).

@@ -87,9 +87,10 @@ A release is blocked if any of these is true:
 |---|---|
 | No malware scanning provider | Interface plus `scan_status`; owner decision D-9 |
 | No email provider for app notifications | D-6 (recommend Amazon SES ap-southeast-1); production refuses to start without one. IdP covers verification and recovery email. |
-| No identity provider tenant yet | A-4; the identity milestone can only be tested against the test OIDC server until the owner creates a provider tenant |
-| Shared repository with Research Nexus AI | GitHub permissions are repository-wide (ADR-0008). Mitigate with CODEOWNERS for `skillgraph/`, GitHub Environments with required reviewers for deploy secrets, and GitHub→AWS OIDC (no stored cloud keys) |
-| Cross-border transfer (Thai users → SG hosting, AU IdP if ZITADEL) | Thailand has no published adequacy list; Section 28/29 basis and DPAs need legal review (ADR-0009 PDPA note) |
+| Identity provider not selected; no test tenant | U-5. Until then only L1 OIDC tests (a real OIDC server in CI) can run; L2 and L3 are reported as blocked (ADR-0009 §11) |
+| Repository not yet created | ADR-0011: independent `SKILLGRAPH` repository with its own permissions, branch protection, secret scanning and Environments. Until migration, docs are held on a Research-Nexus-AI side branch (no code, no secrets) |
+| Cross-border transfer (Thai users → SG hosting; IdP region per U-5) | Requirements and pre-pilot legal gate: `PRIVACY_AND_DATA_TRANSFER.md`. **Legal review before the real-user pilot** (owner Decision 7) |
+| API keys not yet implemented | ADR-0012 (Phase 3). Required tests listed there: scopes, no escalation, cross-tenant, expiry, rotation, revocation, rate limits, log redaction |
 | No cryptographic credential verification | ADR-0007; reports `not_supported` until implemented and tested against official vectors |
 | No penetration test | Required before pilot launch (Phase 4) |
 | No ASVS mapping yet | Phase 1 deliverable |
