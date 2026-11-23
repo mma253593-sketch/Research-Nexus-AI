@@ -1,7 +1,9 @@
 # SKILLGRAPH CORE — Architecture
 
-**Status:** Proposed (Phase 0). Items marked *(decision D-n)* depend on an owner decision listed in `PHASE_0_PLAN.md`.
-**Related:** `DATA_MODEL.md`, `SECURITY.md`, `ADR/`.
+**Status:** Proposed (Phase 0), revised 2026-11-23 after owner decisions D-1, D-2, D-4 and D-5. Items marked *(D-n)* or *(A-n)* depend on an owner decision listed in `PHASE_0_PLAN.md`.
+**Related:** `DATA_MODEL.md`, `SECURITY.md`, `ADR/`, `PHASE_1_PLAN.md`.
+
+**Scope note (ADR-0008).** SKILLGRAPH is a separate product inside `skillgraph/` in this repository. The repository root belongs to the existing **Research Nexus AI** app, which SKILLGRAPH must not change or depend on. All paths in this document are relative to `skillgraph/`.
 
 ---
 
@@ -11,21 +13,22 @@
  Individuals ──┐                                   ┌── Vocational institutions / employers
  (browser)     │                                   │   (browser: org dashboards)
                ▼                                   ▼
-        ┌────────────────────────────────────────────────┐
-        │  apps/web  (Next.js, server-rendered, i18n)    │
-        └───────────────┬────────────────────────────────┘
-                        │ same-origin /api/v1 (session cookie)
- External systems ──────┤ HTTPS /api/v1 (OAuth2 client-credentials bearer token)
- (LMS, HR, verifiers)   ▼
-        ┌────────────────────────────────────────────────┐
-        │  apps/api  (NestJS modular monolith)           │──── SMTP provider (D-6)
-        │  + worker entrypoint (same code, pg-boss jobs) │──── Credential status lists /
-        └───────┬──────────────────────────┬─────────────┘     issuer keys (allow-listed egress)
+        ┌────────────────────────────────────────────────┐        ┌──────────────────────────────┐
+        │  apps/web  (Next.js, server-rendered, i18n)    │◄──────►│ Managed OIDC provider (A-4)  │
+        └───────────────┬────────────────────────────────┘ login  │ sign-in, MFA, recovery,      │
+                        │ same-origin /api/v1 (session cookie)    │ institution SSO              │
+ External systems ──────┤ HTTPS /api/v1 (OAuth2 client-credentials└──────────────▲───────────────┘
+ (LMS, HR, verifiers)   ▼  bearer token issued by SKILLGRAPH)                    │ code exchange,
+        ┌────────────────────────────────────────────────┐                       │ JWKS, logout
+        │  apps/api  (NestJS modular monolith, OIDC RP)  │───────────────────────┘
+        │  + worker entrypoint (same code, pg-boss jobs) │──── Email for app notifications (SES, D-6)
+        └───────┬──────────────────────────┬─────────────┘──── Credential status lists (allow-listed egress)
                 ▼                          ▼
         PostgreSQL 16 (private)     Object storage (private bucket)
+        AWS ap-southeast-1 (ADR-0010; one "cell")
 ```
 
-Only the API process talks to PostgreSQL and object storage. The web app never holds database credentials or storage keys.
+Only the API process talks to PostgreSQL, object storage and the IdP's back-channel endpoints. The web app never holds database credentials, storage keys or IdP tokens.
 
 ## 2. Architectural style
 
@@ -39,7 +42,7 @@ Only the API process talks to PostgreSQL and object storage. The web app never h
 
 | Module | Owns (tables) | Key responsibilities |
 |---|---|---|
-| Identity | users, user_credentials, sessions, auth_tokens, mfa_factors | Registration, login, email verification, reset, MFA, session revocation, account deletion and export requests |
+| Identity | users, external_identities, sessions, platform_role_assignments | OIDC relying party (login, callback, logout, back-channel logout), user provisioning on first login, SKILLGRAPH sessions, MFA step-up checks, IdP admin adapter (deletion, export). **No passwords.** (ADR-0009) |
 | Organization | organizations, organization_members, organization_invitations | Org lifecycle, membership, org roles, issuer authorisation status |
 | Skill Registry | skills, skill_translations, skill_revisions | CRUD, publish workflow, versioning, search |
 | Ontology | skill_relationships | Relationship validation, review workflow, AI suggestions kept as `suggested` |
@@ -64,7 +67,7 @@ Every request passes through these steps in order:
 2. **Security headers / CORS.** Strict CORS allow-list (the web origin only). API clients don't need CORS.
 3. **Rate limit**, keyed by IP and by principal, with per-route classes: `auth`, `search`, `upload`, `export`, `verify`, `default`.
 4. **Authentication.** Resolve the principal from:
-   - a session cookie (web users): opaque random token, looked up by its SHA-256 hash in `sessions`; or
+   - a session cookie (web users): opaque random token created after a successful OIDC login, looked up by its SHA-256 hash in `sessions`; or
    - `Authorization: Bearer` (API clients): opaque access token issued by `/oauth/token`, looked up by hash.
    No principal means anonymous, which is allowed only on routes explicitly marked `@Public()`.
 5. **CSRF check** for cookie-authenticated, state-changing requests (synchronizer token + `SameSite=Lax` cookie + `Origin` check).
@@ -75,13 +78,22 @@ Every request passes through these steps in order:
 10. **Response serialisation** through explicit response DTOs. Entities are never returned directly, so internal fields such as `password_hash` or `storage_key` can't leak.
 11. **Error mapping.** Domain errors map to the PRD §16 envelope. Unknown errors become `INTERNAL_ERROR` with the request ID; details go to logs only.
 
-## 4. Authentication design (summary; full detail in ADR-0004)
+## 4. Authentication design (summary; full detail in ADR-0009)
 
-- **Web users:** first-party accounts with Argon2id password hashes (OWASP-recommended parameters, recorded in config). Server-side sessions in an `HttpOnly; Secure; SameSite=Lax` cookie, with idle and absolute timeouts. Sessions are revocable per device and globally on password change.
-- **Email verification and password reset:** single-use random tokens stored only as hashes. Expiry 24 h (verification) and 30 min (reset). Responses don't reveal whether an email address exists.
-- **MFA:** TOTP, mandatory for Platform Administrator, Organization Administrator, Institution Administrator and Credential Issuer roles before any privileged action. WebAuthn is a later enhancement.
-- **API clients:** OAuth 2.0 client-credentials grant at `POST /api/v1/oauth/token`. Client secrets are hashed with Argon2id and shown once at creation and rotation. Access tokens are opaque, last 15 min and are scope-bound.
-- **"OIDC-compatible" (PRD §13):** in Phase 1 this means the identity model has an `external_identity` link table, so external OIDC providers (institution SSO) can be federated later without a schema change. SKILLGRAPH does **not** run as an OIDC provider in the MVP. *(decision D-4)*
+The owner decided on a **managed OIDC identity provider** (D-4). The recommended provider is ZITADEL Cloud, with Amazon Cognito as runner-up; the final choice is A-4. SKILLGRAPH stores no passwords.
+
+- **Web login (backend-for-frontend):**
+  - `GET /api/v1/auth/login` starts the OIDC Authorization Code flow with PKCE, `state` and `nonce`.
+  - `GET /api/v1/auth/callback` exchanges the code (the API is a confidential client, using `openid-client`) and validates the ID token: signature via JWKS, `iss`, `aud`, `exp`, `nonce`.
+  - The API then upserts the user by (`issuer`, `sub`) and issues a **SKILLGRAPH session**: an opaque random token in a `__Host-` cookie (`HttpOnly; Secure; SameSite=Lax`), stored hashed, with idle and absolute timeouts *(D-14)*.
+  - IdP tokens never reach the browser and are not stored.
+- **Email verification and recovery** are handled by the IdP. SKILLGRAPH accepts an email address only when the `email_verified` claim is true, and never links accounts by email automatically.
+- **MFA:** enforced by the IdP. Before privileged actions, SKILLGRAPH checks `amr`/`acr` and `auth_time` from the login and forces step-up re-authentication if needed. Privileged actions are platform administration, organisation administration, credential issuance and revocation, and API client management. Provider support is verified in spike S-6.
+- **Logout:** local session revocation plus RP-initiated logout at the IdP. OIDC Back-Channel Logout ends SKILLGRAPH sessions when the IdP disables a user.
+- **Institution SSO:** configured per organisation at the IdP. SKILLGRAPH's organisation membership and roles remain authoritative and aren't stored in the IdP.
+- **Provider replaceability:** generic OIDC for login (issuer URL + client credentials). Provider-specific calls (delete user, fetch profile, provision SSO) sit behind one `IdentityProviderAdmin` adapter.
+- **API clients (machine-to-machine):** OAuth 2.0 client-credentials grant at `POST /api/v1/oauth/token`, issued by SKILLGRAPH's Developer API module (Phase 3). Client secrets are random, hashed, shown once and rotatable. Access tokens are opaque, last 15 min and are scope-bound. *(A-5: alternatively IdP-issued machine credentials.)*
+- **No fake authentication:** there is no development bypass. Automated tests use a real in-process OIDC server (`oidc-provider`) as a test-only fixture; development and staging use a real tenant of the chosen provider *(A-6)*.
 
 ## 5. Authorization model
 
@@ -218,30 +230,35 @@ Background jobs use **pg-boss** (a PostgreSQL-backed queue; ADR-0006). Initial j
 - Components are accessible by construction: Radix-based primitives and visible focus. Every status label has text, not colour alone.
 - **Graph view:** React Flow (`@xyflow/react`) for the visual graph, with a **mandatory list/table alternative** of the same nodes and edges for keyboard and screen-reader users (WCAG 2.2 AA). The visual graph isn't accessible on its own.
 
-## 16. Proposed repository structure (minimal)
+## 16. Repository structure (revised for D-1 / ADR-0008)
 
-The PRD §9 layout, trimmed to what Phase 1 needs. Folders are added when they gain content, not up front.
+The repository root stays exactly as the Research Nexus AI app needs it. SKILLGRAPH is self-contained under `skillgraph/`. Folders are added when they gain content, not up front.
 
 ```
-/
-├── apps/
-│   ├── api/                 NestJS app: src/modules/*, src/platform/*, main.ts, worker.ts
-│   │   └── test/            unit + integration tests (real PostgreSQL)
-│   └── web/                 Next.js app
-├── packages/
-│   ├── contracts/           Zod schemas, DTO types, permission matrix, error codes (shared by api & web)
-│   └── config/              eslint/tsconfig presets
-├── database/
-│   ├── migrations/          numbered SQL migrations (forward-only, reviewed)
-│   └── seeds/demo/          demonstration data, clearly labelled, never loaded in production
-├── openapi/skillgraph-v1.yaml
-├── tests/{e2e,security,load}/
-├── docs/                    PRD, ARCHITECTURE, DATA_MODEL, SECURITY, FEASIBILITY_REPORT, PHASE_0_PLAN, ADR/
-├── docker-compose.yml       postgres, minio, mailpit (developer machines / CI)
-├── .env.example
-├── pnpm-workspace.yaml
-└── package.json
+/                               ← Research Nexus AI (unchanged; npm; Vite; AI Studio)
+├── src/  public/  index.html  vite.config.ts  package.json  tsconfig.json  metadata.json  .env.example
+├── .github/workflows/          shared CI folder; one path-filtered workflow per product
+└── skillgraph/                 ← SKILLGRAPH (separate product, own pnpm workspace)
+    ├── apps/
+    │   ├── api/                NestJS: src/modules/*, src/platform/*, main.ts, worker.ts; test/
+    │   └── web/                Next.js app
+    ├── packages/
+    │   ├── contracts/          Zod schemas, DTO types, permission matrix, error codes
+    │   └── config/             eslint/tsconfig presets
+    ├── database/
+    │   ├── migrations/         numbered SQL migrations (forward-only, reviewed) — ADR-0003
+    │   └── seeds/demo/         demonstration data, clearly labelled, refused in production
+    ├── openapi/skillgraph-v1.yaml
+    ├── infra/                  OpenTofu/Terraform for AWS ap-southeast-1 (ADR-0010)
+    ├── tests/{e2e,security,load}/
+    ├── docs/                   PRD, ARCHITECTURE, DATA_MODEL, SECURITY, FEASIBILITY_REPORT, PHASE_0/1 plans, ADR/
+    ├── docker-compose.yml      postgres, minio, mailpit (developer machines / CI)
+    ├── .env.example            SKILLGRAPH-only variables (never the root .env)
+    ├── pnpm-workspace.yaml
+    └── package.json
 ```
+
+Coexistence requires two one-line edits to the Research Nexus config: `tsconfig.json` `exclude` and a Tailwind `@source not`. Both were tested and are pending owner approval *(A-1, ADR-0008)*. Without them, SKILLGRAPH code would break the Research Nexus type-check and leak CSS into its bundle.
 
 Differences from PRD §9:
 
@@ -249,3 +266,14 @@ Differences from PRD §9:
 - `api-client` is deferred until the OpenAPI contract stabilises in Phase 3, then generated.
 - `worker` is an entrypoint inside `apps/api` (ADR-0001).
 - `database/schema` is unnecessary when migrations are the source of truth (ADR-0003).
+
+## 17. Deployment topology and regional portability (ADR-0010)
+
+- **Primary cell:** AWS `ap-southeast-1` (Singapore) *(A-7)*.
+  - ALB (HTTPS, ACM certificate) → ECS Fargate services `web` and `api` (2 tasks each), plus `worker` (1 task).
+  - RDS for PostgreSQL 16, Multi-AZ, private subnets, encrypted, with point-in-time recovery.
+  - S3 private bucket (Block Public Access, SSE-KMS).
+  - Secrets Manager; CloudWatch Logs; CloudFront for static web assets.
+- **Deployment:** GitHub Actions authenticates to AWS through OIDC federation (no stored cloud keys), behind GitHub Environments with required reviewers. Migrations run as a one-off task with the migrator role before the new API version starts.
+- **Regional cells later:** each region is a full, independent stack. `organizations.home_region` and `users.home_region` decide where personal and organisation data live. Public reference data (published skills, frameworks) is replicated read-only from the primary cell. Credential verification URLs name the issuing cell's host.
+- **Portability rules:** standard PostgreSQL only (no Aurora-specific features), OCI images, S3 API through the `ObjectStorage` interface, and IaC in `infra/`. Cloud SDK calls only inside the storage, email and secrets adapters.

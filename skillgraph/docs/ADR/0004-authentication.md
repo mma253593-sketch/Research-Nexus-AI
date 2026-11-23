@@ -1,6 +1,6 @@
 # ADR-0004: First-party authentication with server-side sessions; OAuth 2.0 client credentials for integrations
 
-Status: Proposed — **requires owner approval** (build vs. use an identity provider)
+Status: **Rejected / superseded by [ADR-0009](0009-managed-oidc-authentication.md).** The owner chose a managed OIDC provider (decision D-4, 2026-11-23). This record is kept for history; don't implement it.
 Date: 2026-11-23
 
 ## Context

@@ -21,7 +21,19 @@
 
 No application code was written, and the existing "Research Nexus AI" code wasn't modified.
 
-## 2. Decisions required from the product owner
+## 1a. Decision status (updated 2026-11-23)
+
+| ID | Status | Owner direction → engineering result |
+|---|---|---|
+| D-1 | **Decided** | Preserve Research Nexus AI; SKILLGRAPH separate. **ADR-0008:** `skillgraph/` folder. Two isolation edits to the existing app are pending approval (A-1) |
+| D-2 | **Decided** | Kysely + SQL migrations, PostgreSQL. **ADR-0003 Accepted** |
+| D-4 | **Decided (direction)** | Managed OIDC provider. **ADR-0009:** recommend ZITADEL Cloud (runner-up Cognito). Provider choice pending (A-4) |
+| D-5 | **Decided (direction)** | Global market; Singapore as initial candidate. **ADR-0010:** recommend AWS ap-southeast-1, cost estimated from the AWS price list. Pending (A-7) |
+| D-3, D-6–D-16 | Open | See §2 below; defaults for Phase 1 are proposed in `PHASE_1_PLAN.md` §2 |
+
+New approvals raised by this review (A-1 … A-8) are listed in `PHASE_1_PLAN.md` §1. **Phase 1 implementation doesn't start until the owner explicitly approves the finalized architecture.**
+
+## 2. Decisions required from the product owner (original Phase 0 list)
 
 Each decision shows a **recommendation**. "Blocks" says what can't start until it's answered.
 
@@ -64,7 +76,7 @@ Each decision shows a **recommendation**. "Blocks" says what can't start until i
 | S-2 | **Search latency** at 10k skills, local PostgreSQL 16 | Record p95; indicative only, not a production claim |
 | S-3 | **Graph traversal latency:** 10k skills, 100k edges, depth 2 and 3 with caps (ADR-0002) | Record p95 against the 1,000 ms target; decide caps |
 | S-4 | **RLS prototype:** `skillgraph_app` role, `withPrincipal` transaction context, one org-owned and one personal table, cross-tenant negative tests | Cross-tenant reads return zero rows even when the application check is deliberately removed |
-| S-5 | **Argon2id** install (`@node-rs/argon2`) and parameter timing on target-like hardware | Hash time 100–500 ms at chosen parameters |
+| ~~S-5~~ | ~~Argon2id install and parameter timing~~ **Dropped:** no password hashing for people after D-4 (managed OIDC). Replaced by **S-6** (IdP verification, `PHASE_1_PLAN.md` M1.1) | — |
 | E-1 | OpenAPI contract skeleton for Phase 1 endpoints (health, skills, relationships, auth, organizations), validated by a linter | Lint passes (D-7) |
 | E-2 | Permission matrix draft (roles × actions) | Reviewed by owner (D-8) |
 | E-3 | Test plan (`docs/TEST_PLAN.md`) mapping PRD §27 and §28 to concrete suites | Reviewed |
@@ -73,6 +85,8 @@ Each decision shows a **recommendation**. "Blocks" says what can't start until i
 The spikes run against the locally installed PostgreSQL 16. Results go into the ADRs with the commands used and the hardware they ran on.
 
 ## 4. Proposed Phase 1 milestone breakdown (after Phase 0 approval)
+
+> **Superseded (2026-11-23)** by [`PHASE_1_PLAN.md`](PHASE_1_PLAN.md), which reflects D-1, D-2, D-4 and D-5. The original list is kept below for history.
 
 Each milestone follows the PRD §32 workflow (inspect, plan, implement, lint and types, tests, report actual results, risks).
 

@@ -7,6 +7,8 @@ Date: 2026-11-23
 The PRD (§6, §7) asks for an API-first modular monolith in NestJS/TypeScript with a Next.js frontend and a background worker, and explicitly rules out starting with microservices. The pilot team is small, and the module boundaries (identity, skills, evidence, credentials, consent) aren't yet validated by real usage.
 
 ## Decision
+> Location update (ADR-0008, 2026-11-23): the workspace root is `skillgraph/`, not the repository root, which belongs to Research Nexus AI.
+
 - One pnpm workspace containing `apps/api` (NestJS), `apps/web` (Next.js), `packages/contracts` (Zod schemas, DTO types, permission matrix, error codes) and `packages/config`.
 - The worker is a second entrypoint (`worker.ts`) in `apps/api`, sharing modules and the deployment image and started with a different command. It becomes `apps/worker` only if its dependencies or scaling profile diverge.
 - Module boundaries inside `apps/api` are enforced by a dependency lint rule in CI: modules import only each other's public services and DTOs, and never each other's repositories or tables.

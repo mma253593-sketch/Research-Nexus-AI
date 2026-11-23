@@ -1,6 +1,6 @@
 # SKILLGRAPH CORE — Data Model
 
-**Status:** Proposed (Phase 0). Implemented as numbered SQL migrations in Phase 1/2. Nothing in this document exists in a database yet.
+**Status:** Proposed (Phase 0), revised 2026-11-23 for D-2 (Kysely + SQL migrations, accepted), D-4 (managed OIDC: no password tables) and D-5 (`home_region` for regional cells). Implemented as numbered SQL migrations in `skillgraph/database/migrations/` in Phase 1/2. Nothing in this document exists in a database yet.
 
 Conventions:
 
@@ -19,30 +19,27 @@ Conventions:
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| email | citext UNIQUE NULL | NULL after account deletion (tombstone) |
-| email_verified_at | timestamptz NULL | |
+| email | citext NULL | Copied from the IdP only when `email_verified = true`; **not unique and not used for login or linking** (identity is `external_identities`); NULL after deletion |
+| email_verified_at | timestamptz NULL | Time SKILLGRAPH last saw `email_verified = true` |
 | display_name | text | 1–100 chars |
 | preferred_language | text | `CHECK (preferred_language IN ('th','en'))` |
-| account_status | text | `pending_verification | active | suspended | deleted` |
+| account_status | text | `active | suspended | deleted` (email verification is the IdP's job) |
+| home_region | text | [ADDED; ADR-0010] e.g. `ap-southeast-1`; the cell that holds this person's data |
 | created_at, updated_at | timestamptz | |
 
-`password_hash` is moved to `user_credentials` so that the most-read table never carries secrets.
-
-### user_credentials [ADDED, split from users]
-`user_id` PK/FK, `password_hash` (Argon2id PHC string), `password_changed_at`.
+The PRD's `password_hash or external_identity_reference` resolves to **external identity only** (D-4, ADR-0009). SKILLGRAPH stores no password, password hash, MFA secret, or reset or verification token.
 
 ### external_identities [ADDED]
-`id`, `user_id`, `provider`, `subject`, UNIQUE(`provider`, `subject`). This holds the PRD's "external_identity_reference" for future OIDC federation.
+`id`, `user_id`, `issuer` (the IdP's exact `iss`), `subject` (`sub`), `created_at`, `last_login_at`. UNIQUE(`issuer`, `subject`). This is how a person is identified. A provider change adds new rows through an audited re-linking procedure (ADR-0009 §8).
 
 ### sessions [ADDED]
-`id`, `user_id`, `token_hash` (SHA-256, UNIQUE), `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at`, `mfa_verified_at`, `user_agent_summary`, `ip_prefix`.
-*Reason:* PRD §19 requires session revocation.
+`id`, `user_id`, `token_hash` (SHA-256, UNIQUE), `external_identity_id`, `idp_session_id` NULL (`sid` claim, for back-channel logout), `auth_time`, `amr text[]`, `acr` NULL (from the ID token; used for MFA step-up checks), `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at`, `user_agent_summary`, `ip_prefix`.
+*Reason:* PRD §19 requires session revocation. SKILLGRAPH sessions are independent of IdP tokens, which are not stored.
 
-### auth_tokens [ADDED]
-`id`, `user_id`, `purpose` (`email_verification | password_reset | org_invitation`), `token_hash` UNIQUE, `expires_at`, `consumed_at`. Single use.
+### oidc_login_states [ADDED]
+`state_hash` PK, `nonce`, `code_verifier_encrypted`, `return_to` (relative path only), `created_at`, `expires_at` (≤ 10 min). Single use; deleted on callback. Alternatively, this can live in an encrypted, signed, short-lived cookie (decided in M1.1).
 
-### mfa_factors [ADDED]
-`id`, `user_id`, `type` (`totp`), `secret_encrypted` (application-level envelope encryption; key from the secret manager), `confirmed_at`, `last_used_step`, plus hashed recovery codes.
+The former `user_credentials`, `auth_tokens` and `mfa_factors` tables are **removed** (ADR-0009). Organisation invitations keep their own single-use `token_hash` in `organization_invitations` (§2).
 
 ### platform_role_assignments [ADDED]
 `user_id`, `role` (`platform_admin`), `granted_by`, `granted_at`, `revoked_at`.
@@ -51,7 +48,7 @@ Conventions:
 ## 2. Organizations
 
 ### organizations [PRD]
-`id`, `name`, `organization_type` (`vocational_college | university | training_center | assessment_body | employer | other`), `country_code` (ISO 3166-1 alpha-2), `website`, `verification_status` (`unverified | pending | verified | rejected`), **`issuer_status`** (`none | requested | approved | suspended`) [ADDED; PRD §25 issuer review], `created_at`, `updated_at`.
+`id`, `name`, `organization_type` (`vocational_college | university | training_center | assessment_body | employer | other`), `country_code` (ISO 3166-1 alpha-2), `website`, `verification_status` (`unverified | pending | verified | rejected`), **`issuer_status`** (`none | requested | approved | suspended`) [ADDED; PRD §25 issuer review], **`home_region`** [ADDED; ADR-0010], `idp_organization_ref` NULL [ADDED; ADR-0009: login routing for institution SSO only, never used for authorization], `created_at`, `updated_at`.
 
 ### organization_members [PRD]
 `id`, `organization_id`, `user_id`, `role`, `membership_status` (`invited | active | suspended | removed`), `created_at`. UNIQUE(`organization_id`, `user_id`).
@@ -218,7 +215,7 @@ Append-only enforcement: privileges plus a trigger (ARCHITECTURE §12). Indexes 
 
 - **Account deletion:**
   - Evidence files are deleted from storage, and evidence, claims and consent records are deleted.
-  - Sessions and tokens are deleted.
+  - Sessions and external identities are deleted, and the user is deleted at the IdP through the `IdentityProviderAdmin` adapter (ADR-0009). If the IdP call fails, the job retries, and the failure is visible in admin System Health. It's never silently skipped.
   - The `users` row is tombstoned: `email = NULL`, `display_name = 'Deleted user'`, `account_status = 'deleted'`.
   - Credentials issued *to* the user: the issuer's record remains, as the issuer's own legal record. Holder linkage is retained or anonymised according to a policy that **requires legal review** *(D-12)*.
   - Audit rows are retained; they hold IDs, not PII.

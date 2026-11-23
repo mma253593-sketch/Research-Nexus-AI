@@ -14,7 +14,7 @@
 | Existing code | A Vite + React 19 single-page app called **"Research Nexus AI"** (scientific research workspace: papers, hypotheses, experiments, a Gemini-backed chat companion). About 1,800 lines of TSX/TS. |
 | Relation to SKILLGRAPH | **None.** No shared domain model, no backend, no database, no tests. It uses `src/data/mockData.ts` and a Gemini API key proxied through a Vite dev-server plugin. |
 | Reusable parts | Not as a code base. A few UI ideas (language context, Tailwind setup) are generic and easy to rebuild in Next.js. |
-| Consequence | SKILLGRAPH has to be a new code base. What to do with the existing app is a **decision for the owner** (see `PHASE_0_PLAN.md`, decision D-1). These Phase 0 documents add only `docs/` and don't touch the existing app. |
+| Consequence | SKILLGRAPH has to be a new code base. What to do with the existing app is a **decision for the owner** (see `PHASE_0_PLAN.md`, decision D-1). **Resolved (D-1, 2026-11-23):** keep Research Nexus AI unchanged; SKILLGRAPH lives in `skillgraph/` (ADR-0008). See §6. |
 
 ## 2. Runtime and tooling versions (measured)
 
@@ -63,7 +63,7 @@ Latest versions of the proposed packages on the npm registry, as of the check: `
 
 ### 3.4 Email delivery — not available
 
-- No SMTP credentials or provider. Email verification and password reset (FR-01) need one.
+- No SMTP credentials or provider. Email verification and password reset (FR-01) need one. *(Update after D-4: the managed IdP sends verification and recovery email; SKILLGRAPH only needs email for invitations and notifications. See ADR-0009.)*
 - Proposal: an `EmailTransport` interface. Development uses Mailpit (docker-compose) or a file-capture transport **only enabled when `NODE_ENV != production`**. Production needs a provider chosen by the owner (decision D-6). The application must refuse to start in production without a configured transport.
 
 ### 3.5 External sources
@@ -86,7 +86,7 @@ The ESCO/O\*NET licence review (Phase 0 deliverable) is therefore **NOT DONE**. 
 | PostgreSQL persistence, migrations, RLS | Yes | Verified server; RLS needs a non-owner application role (ARCHITECTURE §6) |
 | Skill registry with Thai/English | Yes | Search must be trigram-based (§3.1) |
 | Bounded graph traversal | Yes | Recursive CTE with depth and node caps; performance at 100k edges is **not yet measured**. Proposed Phase 0 spike. |
-| Authentication (Argon2id, sessions, MFA) | Yes | Argon2id via `@node-rs/argon2` (prebuilt binaries; install **NOT VERIFIED** yet) |
+| Authentication (Argon2id, sessions, MFA) | Yes | *Superseded by D-4:* managed OIDC provider (ADR-0009). Protocol testing is feasible here with an in-process OIDC server. Real-provider testing needs a provider tenant from the owner (**NOT VERIFIED**). |
 | Email verification / reset | Partially | Code can be built and tested; real delivery needs a provider (D-6) |
 | Private object storage | Yes (filesystem driver); S3 driver needs CI/MinIO | §3.3 |
 | Background jobs | Yes | Postgres-backed queue (pg-boss) avoids extra infrastructure (ADR-0006) |
@@ -100,3 +100,43 @@ The ESCO/O\*NET licence review (Phase 0 deliverable) is therefore **NOT DONE**. 
 ## 5. Overall conclusion
 
 The proposed stack can be built and tested in this environment: Node 22, NestJS, PostgreSQL 16 with RLS and pg_trgm, and Next.js. The real blockers come from outside the code: email delivery, production hosting and residency, ESCO/O\*NET data and licences, the credential proof formats to support, and the owner's decision on the existing Research Nexus AI code. These are listed as decisions in `PHASE_0_PLAN.md` and need answers before Phase 1 scaffolding starts.
+
+---
+
+## 6. Addendum — decision review, 2026-11-23
+
+Re-checked after owner decisions D-1, D-2, D-4 and D-5. Every result below comes from a command run in this container on 2026-11-23. Temporary files used for probing were removed afterwards, and the working tree was confirmed clean.
+
+### 6.1 Existing Research Nexus AI baseline
+| Check | Result |
+|---|---|
+| `npm install` (as the repo is) | **Fails:** `ERESOLVE`. `devDependencies.esbuild@^0.25.0` conflicts with `vite@8.3.8` peer `esbuild ^0.27.0 \|\| ^0.28.0`. **Pre-existing; not caused by SKILLGRAPH.** |
+| `npm install --legacy-peer-deps` | Succeeds (181 packages) |
+| `npm run lint` (`tsc --noEmit`) | Exit 0, 0 errors |
+| `npm run build` (`vite build`) | Exit 0 (warning only: a chunk > 500 kB) |
+
+### 6.2 Coexistence conflicts (probe files under `skillgraph/`, then removed)
+| Conflict | Evidence | Fix (tested, then reverted; needs approval A-1) |
+|---|---|---|
+| Root `tsconfig.json` has no `include`, so `tsc` compiles SKILLGRAPH files | `npm run lint` failed with `TS2307: Cannot find module '@nestjs/common'` from `skillgraph/apps/api/src/probe.ts` | Add `"exclude": ["node_modules","dist","skillgraph"]`. Lint returns to exit 0 |
+| Tailwind v4 scans the whole project for class names | Probe class `bg-[#123457]` appeared in the Research Nexus CSS bundle | Add `@source not "../skillgraph";` to `src/index.css`. CSS becomes **byte-identical** to a build without any SKILLGRAPH files |
+| **Already happened:** the Phase 0 Markdown docs (commit `df969bf`) are scanned too | The CSS bundle with docs present gained `.container` and `.table` (65,120 vs 64,827 bytes). Neither class is used anywhere in `src/` (grep), so there's no visual change, but the bundle did change | Same `@source not` line, after the docs moved to `skillgraph/docs/` (done in this revision) |
+| Root `.env` loaded by `vite.config.ts` (`dotenv.config()`) | Read of config | SKILLGRAPH uses only `skillgraph/.env`; the root `.gitignore` already covers `.env*` at any depth |
+| Same `/api` prefix in dev | Research Nexus serves `/api/chat` from its Vite dev server | Separate origins/deployments; no shared host |
+| AI Studio origin | `metadata.json` and `.env.example` reference Google AI Studio and Cloud Run | **Unknown whether AI Studio still writes to this repo.** Owner to confirm (A-3) |
+
+### 6.3 Thai search under managed-database locales
+Managed PostgreSQL typically uses `en_US.UTF-8`, while the earlier test used `C.UTF-8`. Both were tested in separate PostgreSQL 16.15 clusters:
+
+| Test | C.UTF-8 | en_US.UTF-8 |
+|---|---|---|
+| `word_similarity('เซ็นเซอร์', 'การติดตั้งเซ็นเซอร์อุตสาหกรรม')` | 0.778 | 0.778 |
+| `word_similarity('ซ่อมบำรุง', 'งานซ่อมบำรุงเครื่องกล')` | 0.70 | 0.70 |
+| `ILIKE '%โปรแกรม%'` on 20,001 rows with a GIN `gin_trgm_ops` index | Bitmap Index Scan, 1 correct row | Bitmap Index Scan, 1 correct row |
+
+Conclusion: trigram search for Thai behaves identically under both locales, and substring queries use the index. Re-check on the real RDS instance once it exists (it's in M1.7).
+
+### 6.4 Prices and versions
+- AWS public price list for `ap-southeast-1` (publication 2026-11-20) was downloaded and parsed. Results are in ADR-0010. NAT gateway prices weren't in the parsed files and are **NOT VERIFIED**.
+- Library versions on npm at review: `openid-client` 6.9.1, `oidc-provider` 9.15.1, `kysely` 0.29.9, `kysely-codegen` 0.20.0, `pg` 8.23.1, `pg-boss` 12.39.0, `@nestjs/core` 12.6.0, `next` 16.4.6, `next-intl` 4.15.3, `@xyflow/react` 13.0.2, `zod` 4.6.7, `@aws-sdk/client-s3` 3.1175.0.
+- Identity provider and non-AWS hosting facts come from web research (sources in ADR-0009 and ADR-0010). **None of the providers was tested hands-on**; that's spike S-6, and it needs a provider account.

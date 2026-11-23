@@ -1,7 +1,9 @@
 # ADR-0003: Data access layer and SQL-first migrations
 
-Status: Proposed — **requires owner approval** (deviates from the PRD's first-named option, Prisma; the PRD allows "or an equivalent migration-managed ORM")
+Status: **Accepted.** The owner approved Kysely with SQL-based, version-controlled migrations instead of Prisma (decision D-2, 2026-11-23), with PostgreSQL as the primary database and explicit schema definitions, migration history, transaction safety, indexes, constraints and reproducible setup.
 Date: 2026-11-23
+
+> Location update (ADR-0008): paths below are relative to `skillgraph/`, e.g. `skillgraph/database/migrations/`.
 
 ## Context
 The data model depends on PostgreSQL features that must live in migrations, not in application code:
