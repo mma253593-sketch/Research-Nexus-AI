@@ -879,3 +879,155 @@ Optimize for verified progress.
 A small working component with clear specifications and reproducible tests is more valuable than a large unverified system.
 
 Preserve NSL's independence, linguistic consistency, technical integrity, privacy, and security at every stage.
+
+---
+
+## PART XI — NUMERICAL AND MATHEMATICAL ENGINEERING
+
+### 34. Numerical System
+
+NSL must support a formally specified numerical system.
+
+The numerical system must be independent of any particular host programming language.
+
+Define:
+
+- Integer representation.
+- Signed integers.
+- Zero.
+- Positive and negative values.
+- Decimal numbers.
+- Rational numbers.
+- Floating-point numbers.
+- Large integers.
+- Scientific notation.
+- Numeric literals.
+- Numeric parsing.
+- Numeric formatting.
+
+The human-readable numeral system and machine-level numeric representation must be documented separately.
+
+Do not assume that NSL must use decimal positional notation. Evaluate alternative numeral systems, but preserve interoperability with common computing systems.
+
+### 35. Arithmetic Engine
+
+Define the semantics of:
+
+- Addition.
+- Subtraction.
+- Multiplication.
+- Division.
+- Integer division.
+- Modulo.
+- Exponentiation.
+- Roots.
+- Absolute value.
+- Rounding.
+- Truncation.
+- Floor.
+- Ceiling.
+
+Specify operator precedence and associativity.
+
+Specify behavior for division by zero, overflow, underflow, invalid operations, and precision loss.
+
+### 36. Comparison and Logic
+
+Support formal definitions for:
+
+- Equal.
+- Not equal.
+- Greater than.
+- Less than.
+- Greater than or equal.
+- Less than or equal.
+- Logical AND.
+- Logical OR.
+- Logical NOT.
+
+Define Boolean evaluation and short-circuit behavior where applicable.
+
+### 37. Mathematical Domains
+
+The NSL ecosystem should support the following domains:
+
+- Arithmetic.
+- Algebra.
+- Geometry.
+- Trigonometry.
+- Calculus.
+- Linear algebra.
+- Statistics.
+- Probability.
+- Discrete mathematics.
+- Number theory.
+- Numerical analysis.
+- Optimization.
+
+Each domain must have its own documented functions, operations, valid input domains, output types, and error behavior.
+
+### 38. Numeric Type System
+
+Define and distinguish:
+
+- Integer.
+- Arbitrary-precision integer.
+- Fixed-precision decimal.
+- Floating point.
+- Rational.
+- Complex.
+- Boolean.
+- Vector.
+- Matrix.
+
+Specify conversion rules and prevent unintended precision loss.
+
+### 39. Mathematical Functions
+
+Define standard mathematical operations and functions.
+
+Examples include:
+
+- Absolute value.
+- Minimum and maximum.
+- Square root.
+- Exponent.
+- Logarithm.
+- Sine.
+- Cosine.
+- Tangent.
+- Summation.
+- Product.
+- Mean.
+- Median.
+- Standard deviation.
+
+For each function define argument types, return types, domain restrictions, precision requirements, and failure behavior.
+
+### 40. Numerical Verification
+
+Every mathematical implementation must include:
+
+- Known-answer tests.
+- Boundary tests.
+- Precision tests.
+- Overflow tests.
+- Invalid-domain tests.
+- Division-by-zero tests.
+- Property-based tests where applicable.
+- Cross-implementation comparisons where useful.
+
+Never claim mathematical correctness based only on a few example calculations.
+
+### 41. Numerical Governance
+
+All numerical syntax, mathematical vocabulary, numeral representations, and computational semantics must have explicit specification status.
+
+Do not introduce new NSL phonemes or invalid lexical forms to create mathematical terminology.
+
+Preserve the distinction between:
+
+- Human mathematical communication.
+- Formal mathematical notation.
+- NSL programming syntax.
+- Machine-level numeric representation.
