@@ -1,0 +1,124 @@
+# NSL Calculator — Stage A Arithmetic Specification
+
+| Field | Value |
+|---|---|
+| Spec ID | NSL-PL-A01 |
+| Version | 0.1.0 |
+| Status | **EXPERIMENTAL** — implemented and tested; **not APPROVED** by the project owner |
+| Kind | Tree-walking **interpreter** (not a compiler, not a transpiler) |
+| Host | Node.js ≥ 22.18 running TypeScript directly (type stripping); zero dependencies |
+| Domain | NSL Programming Language (separate from NSL human-language grammar) |
+
+## 1. Scope
+
+Covers only the arithmetic subset of Roadmap Stage A: numeric literals, `+ - * /`,
+unary sign, parentheses, and diagnostics. It does **not** cover variables, input/output
+statements, or NSL keywords. Those require owner decisions (§9).
+
+Surface syntax uses ASCII digits and operators as a **provisional placeholder**.
+NSL has no approved numeral words, so no NSL vocabulary appears in this language.
+
+## 2. Lexical grammar
+
+```ebnf
+number     = digit , { digit } , [ "." , digit , { digit } ] ;
+digit      = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+operator   = "+" | "-" | "*" | "/" ;
+delimiter  = "(" | ")" ;
+whitespace = " " | "\t" ;          (* ignored *)
+```
+
+- A number must start with a digit (`.5` is E101) and a `.` must be followed by a digit (`1.` is E101).
+- Leading zeros are allowed (`007` = 7).
+- There are no comments, identifiers, keywords or exponent notation.
+- Any other character is E100.
+
+## 3. Syntax
+
+```ebnf
+program    = expression , EOF ;
+expression = term , { ( "+" | "-" ) , term } ;
+term       = unary , { ( "*" | "/" ) , unary } ;
+unary      = ( "+" | "-" ) , unary | primary ;
+primary    = number | "(" , expression , ")" ;
+```
+
+Abstract syntax:
+
+```
+Expr = Number(value) | Unary(op ∈ {+,-}, Expr) | Binary(op ∈ {+,-,*,/}, Expr, Expr)
+```
+
+Each node records the 1-based source column of its literal or operator.
+
+## 4. Semantics
+
+- **4.1 Precedence and associativity.** Unary binds tighter than `* /`, which bind tighter than `+ -`.
+  Binary operators are left-associative: `10 - 4 - 3` = 3, `8 / 2 * 4` = 16.
+- **4.2 Evaluation order.** The left operand is evaluated fully before the right.
+- **4.3 Number model.** IEEE 754 binary64 (double). There is no separate integer type and no implicit conversions.
+- **4.4 Division.** True division (`7 / 2` = 3.5). A divisor equal to zero (including −0) raises E300.
+- **4.5 Overflow.** A literal or intermediate result that is not finite raises E301 at the producing node.
+- **4.6 Negative zero.** −0 is normalised to 0 after every operation.
+
+## 5. Output (display rule)
+
+The result is rounded to **15 significant digits**, and trailing zeros are dropped, using the host's
+shortest round-trip formatting. So `0.1 + 0.2` displays `0.3`, `1 / 3` displays `0.333333333333333`,
+and very large or small values use exponent form (`1e+24`). The stored value is not changed by this rounding.
+
+## 6. Diagnostics
+
+Format: `error <code> at column <n>: <message>`, written to stderr.
+
+| Code | Phase | Condition |
+|---|---|---|
+| E001 | input | source longer than 1000 characters |
+| E100 | lexical | character not in the alphabet |
+| E101 | lexical | malformed number (`.5`, `1.`, `1.2.3`) |
+| E200 | syntax | unexpected token (`1 +`, `1 2`, `()`, stray `)`) |
+| E201 | syntax | `(` without a matching `)` |
+| E202 | syntax | nesting (parentheses + unary signs) deeper than 100 |
+| E203 | syntax | empty or whitespace-only expression |
+| E300 | runtime | division by zero |
+| E301 | runtime | non-finite result |
+
+Evaluation stops at the first error. There is no error recovery.
+
+## 7. Resource limits and security
+
+The input is untrusted text, so the interpreter has these limits:
+
+- Maximum 1000 characters per expression (E001).
+- Maximum nesting depth of 100 (E202). This prevents host stack exhaustion; a 1000-character `((((…` is rejected cleanly.
+- There is no `eval`, no dynamic code, no filesystem or network access, and no state carried between lines.
+- Parsing and evaluation take time proportional to the input length.
+
+## 8. Usage
+
+```sh
+cd nsl/calculator
+node src/cli.ts "2 * (3 + 4)"     # prints 14, exit 0
+node src/cli.ts "1 / 0"           # stderr: error E300 …, exit 1
+node src/cli.ts                   # interactive prompt "nsl> " (or reads stdin lines)
+npm test                          # runs test/calculator.test.ts
+```
+
+In stdin mode, blank lines are skipped and each line is evaluated on its own. The exit code is 1 if any line failed.
+
+## 9. Open decisions (owner approval required)
+
+1. **Numerals.** Should NSL source use ASCII digits, NSL number words, or both? No NSL numerals exist yet.
+   Any numeral words must pass P01/P02.
+2. **Operators.** Should operators stay as ASCII punctuation, or become pronounceable NSL words?
+   Section 9 of the skill permits punctuation only if the owner approves it.
+3. **Number model.** Should NSL keep a single double type, or add separate integer and decimal types?
+   This affects overflow and division rules.
+4. **Display precision.** Is the 15-significant-digit rule acceptable?
+5. **Remaining Stage A items.** Variables, input and output need a keyword and statement design before implementation.
+
+## 10. Verification record
+
+- Environment: Linux, Node.js v22.23.5, `node:test`.
+- Result: 12/12 test groups pass, including 1000 deterministic property checks against host arithmetic and CLI exit-code/stream tests.
+- Not done: fuzzing, formal proof, or human usability testing.

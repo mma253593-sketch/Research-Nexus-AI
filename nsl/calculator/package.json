@@ -1,0 +1,14 @@
+{
+  "name": "nsl-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NSL Stage A arithmetic calculator (EXPERIMENTAL). No runtime dependencies.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "start": "node src/cli.ts",
+    "test": "node --test test/calculator.test.ts"
+  }
+}
