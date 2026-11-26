@@ -161,6 +161,29 @@ function M.new (bars)
         return arr_series (st)
     end
     env.make_series = function () local st = site (); local s = arr_series (st); rawset (s, "arr", st.arr); return s end
+    env.sum = function (src, n)
+        local st = site (); local T = E.T
+        local w = window (src, n, T)
+        if w then local s = 0; for _, x in ipairs (w) do s = s + x end; st.arr[T] = s else st.arr[T] = nil end
+        return arr_series (st)
+    end
+    -- iff(condition, then, else): series result, condition false if nil/nan/false/0
+    env.iff = function (cond, a, b)
+        local st = site (); local T = E.T
+        local c = val (cond, T)
+        local truthy = c ~= nil and c == c and c ~= false and c ~= 0
+        st.arr[T] = val (truthy and a or b, T)
+        return arr_series (st)
+    end
+    -- change(series, n=1) = series - series[n]
+    env.change = function (src, n)
+        n = n or 1
+        return mk (function (t)
+            local x, y = val (src, t), val (src, t - n)
+            if t - n < 1 or bad (x) or bad (y) then return nil end
+            return x - y
+        end)
+    end
 
     -- ------------------------- stateless helpers -------------------------
     local function lift (f)

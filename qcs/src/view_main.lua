@@ -1,6 +1,6 @@
 
 -- =====================================================================
---  MAIN CHART VIEW  (overlay): EMA, S/R, arrows, triggers, cancel codes
+--  MAIN CHART VIEW (overlay): EMA, S/R, arrows, triggers, regime, cancels
 -- =====================================================================
 input_group {
     "Display - Lines",
@@ -11,6 +11,8 @@ input_group {
     show_sr      = input { default = true, type = input.plot_visibility },
     res_color    = input { default = rgba(255,82,82,0.85), type = input.color },
     sup_color    = input { default = rgba(0,230,118,0.85), type = input.color },
+    show_major   = input { default = true, type = input.plot_visibility },
+    major_color  = input { default = rgba(255,255,255,0.55), type = input.color },
     show_range   = input { default = false, type = input.plot_visibility },
     range_color  = input { default = rgba(255,255,255,0.35), type = input.color },
     show_bb      = input { default = false, type = input.plot_visibility },
@@ -22,6 +24,8 @@ input_group {
     call_color    = input { default = "#00E676", type = input.color },
     put_color     = input { default = "#FF1744", type = input.color },
     show_trigger  = input { default = true, type = input.plot_visibility },
+    show_regime   = input { default = true, type = input.plot_visibility },
+    regime_color  = input { default = rgba(176,190,197,0.9), type = input.color },
     show_cancel   = input { default = true, type = input.plot_visibility },
     show_cancel_m = input { default = false, type = input.plot_visibility },
     cancel_color  = input { default = rgba(255,193,7,0.9), type = input.color },
@@ -36,8 +40,13 @@ if show_ema then
 end
 
 if show_sr then
-    plot (res_lvl, "Resistance", res_color, 2)
-    plot (sup_lvl, "Support",    sup_color, 2)
+    plot (res1, "Resistance", res_color, 2)
+    plot (sup1, "Support",    sup_color, 2)
+end
+
+if show_major then
+    plot (resM, "Major Resistance", major_color, 1)
+    plot (supM, "Major Support",    major_color, 1)
 end
 
 if show_range then
@@ -92,28 +101,37 @@ plot_shape (call_on and NO_CHASE, "CALL No Chase", shape_style.xcross, shape_siz
 plot_shape (put_on and NO_CHASE, "PUT No Chase", shape_style.xcross, shape_size.small,
             chase_color, shape_location.belowbar, 0, "NO CHASE", chase_color)
 
--- --------------------------- CANCELLED (WAIT) -------------------------
--- Shown when a complete setup existed (trend + price-action trigger +
--- score >= threshold) but a hard filter forced WAIT. Code = the reason.
--- Only the first bar of a streak is marked.
-local cb = WAIT_NEW and WAIT_SIDE == 1
-local cs = WAIT_NEW and WAIT_SIDE == -1
-
-if show_cancel_m then
-    plot_shape (cb and WAIT_REASON == "OVEREXT",  "WAIT CALL overextended",shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:RSI",   cancel_color)
-    plot_shape (cb and WAIT_REASON == "CONFLICT", "WAIT CALL conflict",    shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:CONF",  cancel_color)
-    plot_shape (cs and WAIT_REASON == "OVEREXT",  "WAIT PUT overextended", shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:RSI",   cancel_color)
-    plot_shape (cs and WAIT_REASON == "CONFLICT", "WAIT PUT conflict",     shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:CONF",  cancel_color)
+-- ------------------------- REGIME CHANGE LABELS -----------------------
+if show_regime then
+    plot_shape (REGIME_NEW and REGIME == REG_TREND,   "Regime Trend",    shape_style.flag, shape_size.tiny, regime_color, shape_location.top, 0, "TREND",  regime_color)
+    plot_shape (REGIME_NEW and REGIME == REG_RANGE,   "Regime Range",    shape_style.flag, shape_size.tiny, regime_color, shape_location.top, 0, "RANGE",  regime_color)
+    plot_shape (REGIME_NEW and REGIME == REG_HIGHVOL, "Regime High Vol", shape_style.flag, shape_size.tiny, regime_color, shape_location.top, 0, "HI-VOL", regime_color)
+    plot_shape (REGIME_NEW and REGIME == REG_LOWVOL,  "Regime Low Vol",  shape_style.flag, shape_size.tiny, regime_color, shape_location.top, 0, "LO-VOL", regime_color)
+    plot_shape (REGIME_NEW and REGIME == REG_TRANS,   "Regime Transit",  shape_style.flag, shape_size.tiny, regime_color, shape_location.top, 0, "TRANS",  regime_color)
 end
 
-if show_cancel then
-    plot_shape (cb and WAIT_REASON == "NEAR-SR",  "WAIT CALL near S/R",    shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:SR",    cancel_color)
-    plot_shape (cb and WAIT_REASON == "SIDEWAYS", "WAIT CALL sideways",    shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:SIDE",  cancel_color)
-    plot_shape (cb and WAIT_REASON == "VOLATILE", "WAIT CALL volatility",  shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:VOL",   cancel_color)
-    plot_shape (cb and WAIT_REASON == "LATE",     "WAIT CALL late",        shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:LATE",  cancel_color)
+-- --------------------------- CANCELLED (WAIT) -------------------------
+-- A complete setup existed (trend + trigger + score >= threshold) but a
+-- mandatory filter forced WAIT. Only the first bar of a streak is marked.
+local cb = WAIT_NEW and WAIT_SIDE == 1
+local cs = WAIT_NEW and WAIT_SIDE == -1
+local regime_block = WAIT_REASON == "RANGING" or WAIT_REASON == "TRANSITION" or WAIT_REASON == "LOW-VOL"
+local momentum_block = WAIT_REASON == "CONFLICT" or WAIT_REASON == "WEAK-MOM" or WAIT_REASON == "OVEREXT"
+    or WAIT_REASON == "EXHAUST" or WAIT_REASON == "WHIPSAW" or WAIT_REASON == "REVERSAL"
 
-    plot_shape (cs and WAIT_REASON == "NEAR-SR",  "WAIT PUT near S/R",     shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:SR",    cancel_color)
-    plot_shape (cs and WAIT_REASON == "SIDEWAYS", "WAIT PUT sideways",     shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:SIDE",  cancel_color)
-    plot_shape (cs and WAIT_REASON == "VOLATILE", "WAIT PUT volatility",   shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:VOL",   cancel_color)
-    plot_shape (cs and WAIT_REASON == "LATE",     "WAIT PUT late",         shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:LATE",  cancel_color)
+if show_cancel then
+    plot_shape (cb and WAIT_REASON == "NEAR-SR",  "WAIT CALL near S/R",   shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:SR",     cancel_color)
+    plot_shape (cb and regime_block,              "WAIT CALL regime",     shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:REGIME", cancel_color)
+    plot_shape (cb and WAIT_REASON == "VOLATILE", "WAIT CALL volatility", shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:VOL",    cancel_color)
+    plot_shape (cb and WAIT_REASON == "LATE",     "WAIT CALL late",       shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:LATE",   cancel_color)
+
+    plot_shape (cs and WAIT_REASON == "NEAR-SR",  "WAIT PUT near S/R",    shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:SR",     cancel_color)
+    plot_shape (cs and regime_block,              "WAIT PUT regime",      shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:REGIME", cancel_color)
+    plot_shape (cs and WAIT_REASON == "VOLATILE", "WAIT PUT volatility",  shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:VOL",    cancel_color)
+    plot_shape (cs and WAIT_REASON == "LATE",     "WAIT PUT late",        shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:LATE",   cancel_color)
+end
+
+if show_cancel_m then
+    plot_shape (cb and momentum_block, "WAIT CALL momentum", shape_style.xcross, shape_size.tiny, cancel_color, shape_location.belowbar, 0, "X:MOM", cancel_color)
+    plot_shape (cs and momentum_block, "WAIT PUT momentum",  shape_style.xcross, shape_size.tiny, cancel_color, shape_location.abovebar, 0, "X:MOM", cancel_color)
 end

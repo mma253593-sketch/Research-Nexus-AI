@@ -17,13 +17,21 @@ build () {
 }
 
 build "XAUUSD_Smart_Entry_Main.lua" \
-  'instrument { name = "XAUUSD Smart Entry", short_name = "XAU-SE", overlay = true }' \
+  'instrument { name = "XAUUSD Smart Entry V2", short_name = "XAU-SE2", overlay = true }' \
   "view_main.lua"
 
 build "XAUUSD_Smart_Entry_Panel.lua" \
-  'instrument { name = "XAUUSD Smart Entry Panel", short_name = "XAU-SE Score", overlay = false }' \
+  'instrument { name = "XAUUSD Smart Entry V2 Panel", short_name = "XAU-SE2 Score", overlay = false }' \
   "view_panel.lua"
 
 if command -v luac5.3 >/dev/null 2>&1; then
     for f in scripts/*.lua; do luac5.3 -p "$f" && echo "syntax OK: $f"; done
+else
+    echo "luac5.3 not found: syntax check skipped" >&2
+fi
+
+# Optional: qcs/build.sh --test  -> also run the offline test suite (needs lua5.3)
+if [ "${1:-}" = "--test" ]; then
+    cd ..
+    lua5.3 qcs/test/run_tests.lua
 fi
