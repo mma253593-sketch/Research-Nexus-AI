@@ -17,11 +17,11 @@ build () {
 }
 
 build "XAUUSD_Smart_Entry_Main.lua" \
-  'instrument { name = "XAUUSD Smart Entry V2", short_name = "XAU-SE2", overlay = true }' \
+  'instrument { name = "XAUUSD Smart Entry V3 Fast", short_name = "XAU-SE3", overlay = true }' \
   "view_main.lua"
 
 build "XAUUSD_Smart_Entry_Panel.lua" \
-  'instrument { name = "XAUUSD Smart Entry V2 Panel", short_name = "XAU-SE2 Score", overlay = false }' \
+  'instrument { name = "XAUUSD Smart Entry V3 Panel", short_name = "XAU-SE3 Panel", overlay = false }' \
   "view_panel.lua"
 
 # Compact = the Main script with layout-only compression (same code, fewer lines)

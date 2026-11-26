@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## 3.0.0 — Precision Fast Entry (M1, 1-minute expiry)
+
+Base: V1 (chosen by the user). V2 is archived unchanged in `qcs/archive/v2/`.
+
+### Added
+* Dual entry: **Momentum Entry** and **Pullback Entry** with separate rules (`docs/FAST_ENTRY_CONFIG.md`).
+* Trend states (strong/weak up/down, sideways, transition), momentum states (acceleration, bullish/bearish, weakening, exhaustion).
+* Market condition: trending, sideways, high vol, low vol, exhaustion, potential reversal.
+* Signal states WAIT / CALL READY / PUT READY / CALL / PUT / EXPIRED / BLOCKED; NO CHASE kept as a separate live warning.
+* Block reasons SIDEWAYS, LATE, SUPPORT, RESISTANCE, LOW CONFIDENCE, VOLATILITY, EXHAUSTION, REVERSAL, MOMENTUM, COOLDOWN.
+* Score with spec weights (trend 25, momentum 20, price action 20, entry location 20, volatility 10, structure 5), raw vs final.
+* Settings for every parameter, incl. entry-type switches.
+* Sideways efficiency-ratio rule, sideways confirmation (2 bars), high-vol hysteresis (stay while ATR > 1.5x baseline), low-vol state.
+* Test suite for all spec areas (56 checks), pullback-continuation dataset, evaluation by setup, market and session, missed-opportunity rate.
+* Docs: `FAST_ENTRY_AUDIT.md`, `FAST_ENTRY_CONFIG.md`, `FAST_ENTRY_TEST_REPORT.md`.
+
+### Changed (vs V1)
+* Defaults per spec: cooldown 2 (was 3), late body 2.0 ATR (was 1.8).
+* Candle measurements use ATR before the confirmation candle; pivots tick-safe with strict ties (V1 defects D2–D4).
+* Pullback entries measure lateness from EMA9 (the EMA price pulled back to); Momentum entries keep the EMA21 rule.
+* Main chart labels: setup type (MOMENTUM/PULLBACK) instead of pattern names; READY markers; X:LATE/X:SR/X:SIDE/X:VOL kept.
+
+### Not done
+* No real-data backtest (no data available). Not yet run on the IQ Option engine.
+
 ## 2.0.0 — Adaptive Precision Engine
 
 Behaviour changes are intentional and listed here; nothing changed silently.

@@ -72,6 +72,20 @@ function G.reversal (n, seed)
            { flip = flip }
 end
 
+-- Trend made of impulse legs and shallow pullbacks (dir = 1 up, -1 down)
+function G.pullback (n, seed, dir)
+    local segs = { { n = 300, drift = 0.05 * dir, vol = 0.6 } }
+    local total = 300
+    while total < n do
+        segs[#segs + 1] = { n = 10, drift = 0.35 * dir, vol = 0.5 }
+        segs[#segs + 1] = { n = 4, drift = -0.25 * dir, vol = 0.5 }
+        total = total + 14
+    end
+    local bars = build (segs, seed)
+    while #bars > n do table.remove (bars) end
+    return bars, { test_from = 301 }
+end
+
 function G.flat (n)
     local bars = {}
     for t = 1, n do bars[t] = { o = 2650, h = 2650, l = 2650, c = 2650 } end

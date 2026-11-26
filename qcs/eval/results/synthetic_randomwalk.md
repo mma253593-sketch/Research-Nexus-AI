@@ -1,87 +1,87 @@
-# Evaluation output
+# Evaluation output (1-minute expiry)
 
-* Data: SYNTHETIC driftless random walk (leakage check, seed 99), 12000 candles
-* Payout assumption: 80% (break-even win rate 55.6%). Tie = loss.
-* Entry at the open of the arrow candle; expiry measured in candles.
+* Data: SYNTHETIC driftless random walk (leakage check, seed 99), 12000 M1 candles
+* Payout 80% → break-even win rate 55.6%. Entry = open of the arrow candle, expiry = its close, tie = loss.
 
-## Signals
+## All signals
 
-| Version | Total | CALL | PUT | Signals per 1000 bars |
-|---|---|---|---|---|
-| V1.0 | 418 | 198 | 220 | 34.8 |
-| V2.0 | 45 | 25 | 20 | 3.8 |
+| Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|
+| V1.0 | 418 | 52.4% | 47.6–57.1% | 47.6% | -23.8 | -0.057 | 31.4 | 6 |
+| V2.0 | 45 | 42.2% | 29.0–56.7% | 57.8% | -10.8 | -0.240 | 14.0 | 4 |
+| V3.0 | 313 | 52.4% | 46.9–57.9% | 47.6% | -17.8 | -0.057 | 23.2 | 5 |
 
-## By expiry
+## CALL / PUT
 
-### Expiry 1 candle(s)
+| Side | Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|---|
+| CALL | V1.0 | 198 | 54.0% | 47.1–60.8% | 46.0% | -5.4 | -0.027 | 20.0 | 8 |
+| PUT | V1.0 | 220 | 50.9% | 44.3–57.4% | 49.1% | -18.4 | -0.084 | 23.6 | 7 |
+| CALL | V2.0 | 25 | 40.0% | 23.4–59.3% | 60.0% | -7.0 | -0.280 | 8.2 | 3 |
+| PUT | V2.0 | 20 | 45.0% | 25.8–65.8% | 55.0% | -3.8 | -0.190 | 7.0 | 4 |
+| CALL | V3.0 | 132 | 50.8% | 42.3–59.1% | 49.2% | -11.4 | -0.086 | 16.0 | 5 |
+| PUT | V3.0 | 181 | 53.6% | 46.3–60.7% | 46.4% | -6.4 | -0.035 | 19.0 | 8 |
 
-| Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|
-| V1.0 | 418 | 52.4% | 47.6–57.1% | -0.057 | 31.4 | 6 |
-| V2.0 | 45 | 42.2% | 29.0–56.7% | -0.240 | 14.0 | 4 |
+## V3 by setup type
 
-### Expiry 2 candle(s)
+| Setup | Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|---|
+| MOMENTUM | V3.0 | 47 | 48.9% | 35.3–62.8% | 51.1% | -5.6 | -0.119 | 9.8 | 4 |
+| PULLBACK | V3.0 | 266 | 53.0% | 47.0–58.9% | 47.0% | -12.2 | -0.046 | 17.0 | 5 |
 
-| Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|
-| V1.0 | 418 | 50.7% | 45.9–55.5% | -0.087 | 44.8 | 6 |
-| V2.0 | 45 | 42.2% | 29.0–56.7% | -0.240 | 12.4 | 4 |
+## By market condition (V3 classification at the entry bar)
 
-### Expiry 3 candle(s)
+| Market | Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|---|
+| transition/warm-up | V1.0 | 3 | 66.7% | 20.8–93.9% | 33.3% | +0.6 | +0.200 | 1.0 | 1 |
+| trend | V1.0 | 294 | 51.7% | 46.0–57.4% | 48.3% | -20.4 | -0.069 | 24.8 | 7 |
+| trend | V2.0 | 39 | 41.0% | 27.1–56.6% | 59.0% | -10.2 | -0.262 | 12.8 | 4 |
+| trend | V3.0 | 313 | 52.4% | 46.9–57.9% | 47.6% | -17.8 | -0.057 | 23.2 | 5 |
+| sideways | V1.0 | 95 | 54.7% | 44.7–64.4% | 45.3% | -1.4 | -0.015 | 12.4 | 4 |
+| sideways | V2.0 | 6 | 50.0% | 18.8–81.2% | 50.0% | -0.6 | -0.100 | 2.2 | 2 |
+| exhaustion | V1.0 | 26 | 50.0% | 32.1–67.9% | 50.0% | -2.6 | -0.100 | 4.6 | 4 |
 
-| Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|
-| V1.0 | 418 | 51.0% | 46.2–55.7% | -0.083 | 41.2 | 10 |
-| V2.0 | 45 | 46.7% | 32.9–60.9% | -0.160 | 8.8 | 3 |
+## By session
 
-### Expiry 5 candle(s)
+| Session | Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|---|
+| n/a (no time column) | V1.0 | 418 | 52.4% | 47.6–57.1% | 47.6% | -23.8 | -0.057 | 31.4 | 6 |
+| n/a (no time column) | V2.0 | 45 | 42.2% | 29.0–56.7% | 57.8% | -10.8 | -0.240 | 14.0 | 4 |
+| n/a (no time column) | V3.0 | 313 | 52.4% | 46.9–57.9% | 47.6% | -17.8 | -0.057 | 23.2 | 5 |
 
-| Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|
-| V1.0 | 418 | 53.6% | 48.8–58.3% | -0.035 | 41.6 | 7 |
-| V2.0 | 45 | 46.7% | 32.9–60.9% | -0.160 | 10.0 | 4 |
+## Missed opportunities
 
-## By market regime (V2 regime at the entry bar), expiry 1
+| Version | Opportunity candles | Caught (signal on that candle, same side) | Missed opportunity rate |
+|---|---|---|---|
+| V1.0 | 2563 | 105 | 95.9% |
+| V2.0 | 2563 | 7 | 99.7% |
+| V3.0 | 2563 | 73 | 97.2% |
 
-| Regime | Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|---|
-| TREND | V1.0 | 140 | 48.6% | 40.4–56.8% | -0.126 | 20.4 | 5 |
-| TREND | V2.0 | 44 | 43.2% | 29.7–57.8% | -0.223 | 13.0 | 4 |
-| RANGE | V1.0 | 89 | 50.6% | 40.4–60.7% | -0.090 | 16.0 | 4 |
-| TRANS | V1.0 | 189 | 56.1% | 49.0–63.0% | +0.010 | 7.6 | 6 |
-| TRANS | V2.0 | 1 | 0.0% | 0.0–79.3% | -1.000 | 1.0 | 1 |
+## Chronological splits and walk-forward (no fitting)
 
-## By confidence band, expiry 1
-
-| Band | Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|---|
-| 70-84 | V1.0 | 134 | 57.5% | 49.0–65.5% | +0.034 | 8.0 | 5 |
-| 70-84 | V2.0 | 25 | 40.0% | 23.4–59.3% | -0.280 | 7.8 | 4 |
-| 85-100 | V1.0 | 284 | 50.0% | 44.2–55.8% | -0.100 | 35.0 | 9 |
-| 85-100 | V2.0 | 20 | 45.0% | 25.8–65.8% | -0.190 | 8.6 | 5 |
-
-## Chronological splits (no fitting on any split), expiry 1
-
-| Split | Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|---|
-| train 0-60% | V1.0 | 256 | 50.8% | 44.7–56.8% | -0.086 | 27.8 | 6 |
-| train 0-60% | V2.0 | 31 | 38.7% | 23.7–56.2% | -0.303 | 11.8 | 4 |
-| validation 60-80% | V1.0 | 91 | 53.8% | 43.7–63.7% | -0.031 | 11.4 | 6 |
-| validation 60-80% | V2.0 | 7 | 42.9% | 15.8–75.0% | -0.229 | 3.0 | 3 |
-| test 80-100% | V1.0 | 71 | 56.3% | 44.8–67.3% | +0.014 | 5.6 | 5 |
-| test 80-100% | V2.0 | 7 | 57.1% | 25.0–84.2% | +0.029 | 2.0 | 2 |
-
-## Walk-forward (5 sequential folds), expiry 1
-
-| Fold | Version | Trades | Win rate | 95% CI | Expectancy / trade | Max DD (stakes) | Max consec. losses |
-|---|---|---|---|---|---|---|---|
-| 1 | V1.0 | 75 | 54.7% | 43.4–65.4% | -0.016 | 6.8 | 4 |
-| 1 | V2.0 | 10 | 40.0% | 16.8–68.7% | -0.280 | 4.4 | 4 |
-| 2 | V1.0 | 91 | 46.2% | 36.3–56.3% | -0.169 | 18.4 | 5 |
-| 2 | V2.0 | 14 | 35.7% | 16.3–61.2% | -0.357 | 5.6 | 4 |
-| 3 | V1.0 | 90 | 52.2% | 42.0–62.2% | -0.060 | 13.6 | 6 |
-| 3 | V2.0 | 7 | 42.9% | 15.8–75.0% | -0.229 | 2.4 | 2 |
-| 4 | V1.0 | 91 | 53.8% | 43.7–63.7% | -0.031 | 11.4 | 6 |
-| 4 | V2.0 | 7 | 42.9% | 15.8–75.0% | -0.229 | 3.0 | 3 |
-| 5 | V1.0 | 71 | 56.3% | 44.8–67.3% | +0.014 | 5.6 | 5 |
-| 5 | V2.0 | 7 | 57.1% | 25.0–84.2% | +0.029 | 2.0 | 2 |
+| Split | Version | Signals | Win rate | 95% CI | Loss / false-signal rate | Net (stakes) | Per trade | Max DD | Max consec. losses |
+|---|---|---|---|---|---|---|---|---|---|
+| train 0-60% | V1.0 | 256 | 50.8% | 44.7–56.8% | 49.2% | -22.0 | -0.086 | 27.8 | 6 |
+| train 0-60% | V2.0 | 31 | 38.7% | 23.7–56.2% | 61.3% | -9.4 | -0.303 | 11.8 | 4 |
+| train 0-60% | V3.0 | 181 | 52.5% | 45.2–59.6% | 47.5% | -10.0 | -0.055 | 16.2 | 5 |
+| validation 60-80% | V1.0 | 91 | 53.8% | 43.7–63.7% | 46.2% | -2.8 | -0.031 | 11.4 | 6 |
+| validation 60-80% | V2.0 | 7 | 42.9% | 15.8–75.0% | 57.1% | -1.6 | -0.229 | 3.0 | 3 |
+| validation 60-80% | V3.0 | 61 | 52.5% | 40.2–64.5% | 47.5% | -3.4 | -0.056 | 8.8 | 5 |
+| test 80-100% | V1.0 | 71 | 56.3% | 44.8–67.3% | 43.7% | +1.0 | +0.014 | 5.6 | 5 |
+| test 80-100% | V2.0 | 7 | 57.1% | 25.0–84.2% | 42.9% | +0.2 | +0.029 | 2.0 | 2 |
+| test 80-100% | V3.0 | 71 | 52.1% | 40.7–63.3% | 47.9% | -4.4 | -0.062 | 8.2 | 4 |
+| fold 1 | V1.0 | 75 | 54.7% | 43.4–65.4% | 45.3% | -1.2 | -0.016 | 6.8 | 4 |
+| fold 1 | V2.0 | 10 | 40.0% | 16.8–68.7% | 60.0% | -2.8 | -0.280 | 4.4 | 4 |
+| fold 1 | V3.0 | 69 | 49.3% | 37.8–60.8% | 50.7% | -7.8 | -0.113 | 13.4 | 5 |
+| fold 2 | V1.0 | 91 | 46.2% | 36.3–56.3% | 53.8% | -15.4 | -0.169 | 18.4 | 5 |
+| fold 2 | V2.0 | 14 | 35.7% | 16.3–61.2% | 64.3% | -5.0 | -0.357 | 5.6 | 4 |
+| fold 2 | V3.0 | 55 | 56.4% | 43.3–68.6% | 43.6% | +0.8 | +0.015 | 7.6 | 4 |
+| fold 3 | V1.0 | 90 | 52.2% | 42.0–62.2% | 47.8% | -5.4 | -0.060 | 13.6 | 6 |
+| fold 3 | V2.0 | 7 | 42.9% | 15.8–75.0% | 57.1% | -1.6 | -0.229 | 2.4 | 2 |
+| fold 3 | V3.0 | 57 | 52.6% | 39.9–65.0% | 47.4% | -3.0 | -0.053 | 6.6 | 4 |
+| fold 4 | V1.0 | 91 | 53.8% | 43.7–63.7% | 46.2% | -2.8 | -0.031 | 11.4 | 6 |
+| fold 4 | V2.0 | 7 | 42.9% | 15.8–75.0% | 57.1% | -1.6 | -0.229 | 3.0 | 3 |
+| fold 4 | V3.0 | 61 | 52.5% | 40.2–64.5% | 47.5% | -3.4 | -0.056 | 8.8 | 5 |
+| fold 5 | V1.0 | 71 | 56.3% | 44.8–67.3% | 43.7% | +1.0 | +0.014 | 5.6 | 5 |
+| fold 5 | V2.0 | 7 | 57.1% | 25.0–84.2% | 42.9% | +0.2 | +0.029 | 2.0 | 2 |
+| fold 5 | V3.0 | 71 | 52.1% | 40.7–63.3% | 47.9% | -4.4 | -0.062 | 8.2 | 4 |
