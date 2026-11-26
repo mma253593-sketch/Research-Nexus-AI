@@ -27,6 +27,8 @@ build "XAUUSD_Smart_Entry_Panel.lua" \
 # Compact = the Main script with layout-only compression (same code, fewer lines)
 if command -v lua5.3 >/dev/null 2>&1; then
     lua5.3 tools/compact.lua scripts/XAUUSD_Smart_Entry_Main.lua scripts/XAUUSD_Smart_Entry_Compact.lua
+    # Mini = Compact with whitespace removed (fits the V1 size: <= 24,790 characters)
+    lua5.3 tools/minify.lua scripts/XAUUSD_Smart_Entry_Compact.lua scripts/XAUUSD_Smart_Entry_Mini.lua
 else
     echo "lua5.3 not found: Compact script not regenerated" >&2
 fi

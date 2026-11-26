@@ -394,6 +394,32 @@ do
     check (tdiff == 0, "Compact: simulated ticks never change decisions (" .. tdiff .. " diffs)")
 end
 
+section ("Q. Mini script equals Main (whitespace-only minify, <= 24,790 characters)")
+do
+    local MINI = "qcs/scripts/XAUUSD_Smart_Entry_Mini.lua"
+    local ok = os.execute ("luac5.3 -p " .. MINI .. " 2>/dev/null")
+    check (ok == true or ok == 0, "syntax " .. MINI)
+    SRC[MINI] = read (MINI)
+    local chars = utf8.len (SRC[MINI]) or #SRC[MINI]
+    check (chars <= 24790, ("Mini has %d characters (limit 24,790 = V1 Main)"):format (chars))
+    local diff, n = 0, 0
+    for i = 1, 3 do
+        local rec, E = run (MINI, MIXED[i])
+        for T = 1, #rec do
+            for _, k in ipairs (FIELDS) do n = n + 1; if rec[T][k] ~= MIXED_RUNS[i].rec[T][k] then diff = diff + 1 end end
+        end
+        for name, t in pairs (MIXED_RUNS[i].E.shapes) do
+            for T in pairs (t) do n = n + 1; if not (E.shapes[name] and E.shapes[name][T]) then diff = diff + 1 end end
+        end
+        for name, t in pairs (E.shapes) do
+            for T in pairs (t) do if not (MIXED_RUNS[i].E.shapes[name] and MIXED_RUNS[i].E.shapes[name][T]) then diff = diff + 1 end end
+        end
+    end
+    check (diff == 0, ("Mini outputs and chart shapes identical to Main (%d values, %d differences)"):format (n, diff))
+    local _, _, tdiff = run (MINI, MIXED[2], { ticks = 3 })
+    check (tdiff == 0, "Mini: simulated ticks never change decisions (" .. tdiff .. " diffs)")
+end
+
 section ("Warm-up, short and degenerate data")
 do
     local rec = MIXED_RUNS[2].rec
