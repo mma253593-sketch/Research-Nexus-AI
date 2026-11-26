@@ -21,6 +21,7 @@ Indicator แจ้งจังหวะเข้าเทรด **CALL / PUT / 
 |---|---|
 | `scripts/XAUUSD_Smart_Entry_Main.lua` | ซ้อนบนกราฟ: EMA 9/21/50, แนวรับ/ต้าน (ย่อย+หลัก), ลูกศร, แท่งยืนยัน, ป้ายเปลี่ยนสภาพตลาด, เครื่องหมายยกเลิก |
 | `scripts/XAUUSD_Smart_Entry_Panel.lua` | หน้าต่างล่าง: Score 2.0, คะแนนขั้นต่ำที่ต้องการ (ปรับตามตลาด), แรงซื้อ/ขาย, แถบสภาพตลาด, เหตุผลที่ยกเลิก |
+| `scripts/XAUUSD_Smart_Entry_Lite.lua` | **รุ่นสั้นไฟล์เดียว (252 บรรทัด)** ใช้แทน Main + Panel ได้: สัญญาณเหมือน Main ทุกแท่ง (ทดสอบแล้ว) แสดงเฉพาะ EMA, แนวรับ/ต้าน, ลูกศร และ NO CHASE ตั้งค่าได้ 3 อย่าง (Min score, Cooldown, Trade transitional) |
 
 ## 2. วิธีติดตั้งใน IQ Option
 

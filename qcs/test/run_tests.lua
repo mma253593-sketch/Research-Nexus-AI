@@ -348,6 +348,28 @@ do
     print (("        confirmed regime flips: %.1f per 1000 bars (raw %.1f)"):format (1000 * flips / (#rec - 120), 1000 * raw_flips / (#rec - 120)))
 end
 
+section ("O. Lite script equals Main (same engine, short display)")
+do
+    local LITE = "qcs/scripts/XAUUSD_Smart_Entry_Lite.lua"
+    local ok = os.execute ("luac5.3 -p " .. LITE .. " 2>/dev/null")
+    check (ok == true or ok == 0, "syntax " .. LITE)
+    SRC[LITE] = read (LITE)
+    local diff, n, tick = 0, 0, 0
+    local sets = { MIXED[1], MIXED[2], MIXED[3], (gen.range (1400, 202)), (gen.reversal (1500, 707)), gen.flat (300) }
+    for i, bars in ipairs (sets) do
+        local E = mock.new (bars); E.load (SRC[LITE])
+        local ref = (i <= 3) and MIXED_RUNS[i].rec or run (MAIN, bars)
+        for T = 1, #bars do
+            E.run_bar (T); n = n + 1
+            if E.env.SIG_DIR ~= ref[T].SIG_DIR or E.env.SIG_SCORE ~= ref[T].SIG_SCORE then diff = diff + 1 end
+        end
+    end
+    check (diff == 0, ("Lite SIG_DIR / SIG_SCORE identical to Main on %d bars (%d differences)"):format (n, diff))
+    -- fields Lite does not define read as nil on every run, so they compare equal
+    local _, _, tdiff = run (LITE, MIXED[2], { ticks = 3 })
+    check (tdiff == 0, "Lite: simulated ticks never change its signals (" .. tdiff .. " diffs)")
+end
+
 section ("Warm-up, short and degenerate data")
 do
     local rec = MIXED_RUNS[2].rec
