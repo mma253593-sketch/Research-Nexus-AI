@@ -370,6 +370,30 @@ do
     check (tdiff == 0, "Lite: simulated ticks never change its signals (" .. tdiff .. " diffs)")
 end
 
+section ("P. Compact script equals Main (layout-only compression)")
+do
+    local COMPACT = "qcs/scripts/XAUUSD_Smart_Entry_Compact.lua"
+    local ok = os.execute ("luac5.3 -p " .. COMPACT .. " 2>/dev/null")
+    check (ok == true or ok == 0, "syntax " .. COMPACT)
+    SRC[COMPACT] = read (COMPACT)
+    local lines = select (2, SRC[COMPACT]:gsub ("\n", "\n"))
+    local v1 = select (2, read ("qcs/eval/baseline/XAUUSD_Smart_Entry_V1_Main.lua"):gsub ("\n", "\n"))
+    check (lines <= v1, ("Compact is not longer than V1 Main (%d <= %d lines)"):format (lines, v1))
+    local diff, n = 0, 0
+    for i = 1, 2 do
+        local rec, E = run (COMPACT, MIXED[i])
+        for T = 1, #rec do
+            for _, k in ipairs (FIELDS) do n = n + 1; if rec[T][k] ~= MIXED_RUNS[i].rec[T][k] then diff = diff + 1 end end
+        end
+        for name, t in pairs (MIXED_RUNS[i].E.shapes) do
+            for T, s in pairs (t) do n = n + 1; if not (E.shapes[name] and E.shapes[name][T]) then diff = diff + 1 end end
+        end
+    end
+    check (diff == 0, ("Compact outputs and chart shapes identical to Main (%d values, %d differences)"):format (n, diff))
+    local _, _, tdiff = run (COMPACT, MIXED[3], { ticks = 3 })
+    check (tdiff == 0, "Compact: simulated ticks never change decisions (" .. tdiff .. " diffs)")
+end
+
 section ("Warm-up, short and degenerate data")
 do
     local rec = MIXED_RUNS[2].rec

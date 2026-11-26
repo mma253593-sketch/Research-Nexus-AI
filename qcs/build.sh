@@ -24,6 +24,13 @@ build "XAUUSD_Smart_Entry_Panel.lua" \
   'instrument { name = "XAUUSD Smart Entry V2 Panel", short_name = "XAU-SE2 Score", overlay = false }' \
   "view_panel.lua"
 
+# Compact = the Main script with layout-only compression (same code, fewer lines)
+if command -v lua5.3 >/dev/null 2>&1; then
+    lua5.3 tools/compact.lua scripts/XAUUSD_Smart_Entry_Main.lua scripts/XAUUSD_Smart_Entry_Compact.lua
+else
+    echo "lua5.3 not found: Compact script not regenerated" >&2
+fi
+
 if command -v luac5.3 >/dev/null 2>&1; then
     for f in scripts/*.lua; do luac5.3 -p "$f" && echo "syntax OK: $f"; done
 else
