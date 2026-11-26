@@ -32,22 +32,44 @@ for n, l in ipairs (lines) do
     end
 end
 
-local function kind (l)
+-- A "simple statement" is one complete single-line assignment or call:
+-- no block keyword, no function definition, no unfinished expression, and
+-- the next line is not a continuation of it. Such lines at the same
+-- indentation can be joined with "; " without changing meaning.
+local KEYWORDS = { ["if"] = 1, ["elseif"] = 1, ["else"] = 1, ["for"] = 1, ["while"] = 1,
+                   ["repeat"] = 1, ["until"] = 1, ["return"] = 1, ["end"] = 1, ["do"] = 1,
+                   ["and"] = 1, ["or"] = 1, ["not"] = 1 }
+local function simple (l, nxt)
+    local first = l:match ("^%s*([%a_]+)")
+    if not first or KEYWORDS[first] or l:match ("function") then return false end
+    if l:match ("[,%({=%+%-%*/]%s*$") or l:match ("%f[%w]and%s*$") or l:match ("%f[%w]or%s*$")
+       or l:match ("then%s*$") or l:match ("do%s*$") then return false end
+    if nxt and (nxt:match ("^%s*and%f[%W]") or nxt:match ("^%s*or%f[%W]") or nxt:match ("^%s*[%+%-%*/%.]")) then
+        return false
+    end
+    if l:match ("plot_shape") then return false end                   -- already long lines
+    local assign = l:match ("^%s*local%s") or l:match ("^%s*[%w_%.]+[%w_%., ]*=[^=]")
+    local call = l:match ("^%s*[%w_:%.]+%s?%b()%s*$")
+    return (assign or call) and true or false
+end
+
+local function kind (l, nxt)
     if l:match ("^%s+[%w_]+%s*=%s*input[%s{(]") and l:match (",$") then return "field" end
-    if l:match ("^[%w_]+%s*=%s*make_series%s*%(%)$") then return "stmt" end
-    if l:match ("^[A-Z][A-Z0-9_]*%s*=%s*[^,]+$") and not l:match ("[{(]$") then return "stmt" end
+    if simple (l, nxt) then return "stmt" .. l:match ("^(%s*)") end    -- grouped per indentation
     return nil
 end
 
 local i = 1
 while i <= #kept do
     local l = kept[i]
-    local k = kind (l)
+    local k = kind (l, kept[i + 1])
     if k then
         local group, j = { l }, i + 1
-        local max = (k == "field") and 3 or 4             -- 3 settings or 4 short statements per line
-        while j <= #kept and #group < max and kind (kept[j]) == k do
-            group[#group + 1] = kept[j]:gsub ("^%s+", ""); j = j + 1
+        local max = (k == "field") and 2 or 3             -- 2 settings or 3 short statements per line
+        local len = #l
+        while j <= #kept and #group < max and kind (kept[j], kept[j + 1]) == k
+              and (k == "field" or len + #kept[j] <= 140) do
+            group[#group + 1] = kept[j]:gsub ("^%s+", ""); len = len + #kept[j]; j = j + 1
         end
         out[#out + 1] = table.concat (group, k == "field" and " " or "; ")
         i = j
