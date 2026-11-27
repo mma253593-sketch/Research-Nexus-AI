@@ -27,7 +27,7 @@ instrument { name = "Security Read Diagnostic", short_name = "SEC-READ", overlay
 input_group {
     "Diagnostic",
     tf_sel   = input (2, "TF 1=1m 2=5m 3=15m", input.integer, 1, 3),
-    mode     = input (1, "Show 1=Types A 2=Types B 3=Prices 4=Times 5=Lines", input.integer, 1, 5),
+    mode     = input (1, "Show 1=TypesA 2=TypesB 3=Prices 4=Times 5=Lines 6=Inspect close 7=Inspect open_time", input.integer, 1, 7),
     dsp      = input (2, "Bars per character", input.integer, 1, 20),
     do_print = input (1, "Print log 1=on 0=off", input.integer, 0, 1)
 }
@@ -132,6 +132,7 @@ local function read_tf(res)
                 r.k1, r.v1 = kcode(ok1, v1), (ok1 and num(v1) or nil)
                 r.raw0 = ok0 and tostring(v0) or ("ERR " .. tostring(v0))
                 r.raw1 = ok1 and tostring(v1) or ("ERR " .. tostring(v1))
+                r.s = s
             elseif okf then
                 r.is, r.k0, r.k1 = 4, 3, 3      -- field is nil
             else
@@ -251,6 +252,51 @@ elseif mode == 3 then
     value_of("C1", d.f.close, 1)
     value_of("H0", d.f.high, 0)
     value_of("L0", d.f.low, 0)
+elseif mode >= 6 then
+    -- Inspect the field object itself with plain Lua (no QCS API):
+    -- N = #field, MT = has a metatable, K/V = first pair from next(),
+    -- I1 = field[1], IN = field[N]. Shows whether it is an array of
+    -- values and which end is newest.
+    local fname = (mode == 6) and "close" or "open_time"
+    local fs = d.f[fname].s
+    add(SHORT[fname])
+    if fs == nil then
+        add("NOFIELD")
+    end
+    local okn, n = false, nil
+    if fs ~= nil then
+        okn, n = try(function () return #fs end)
+    end
+    local nn = okn and num(n) or nil
+    -- hold() is called the same number of times on every bar
+    local function vk(ok, v)
+        local k = hold(kcode(ok, v)) or 3
+        local x = hold(num(v))
+        return fmtnum(k, x)
+    end
+    local hn = hold(nn)
+    add("N=" .. ((hn ~= nil) and string.format("%.0f", hn) or "NA"))
+    local okm, mt = false, nil
+    if fs ~= nil and type(getmetatable) == "function" then
+        okm, mt = try(getmetatable, fs)
+    end
+    add("MT=" .. code_txt(YN, (okm and mt ~= nil) and 1 or 2))
+    local okx, k1, v1 = false, nil, nil
+    if fs ~= nil and type(next) == "function" and (type(fs) == "table") then
+        okx, k1, v1 = try(next, fs)
+    end
+    add("K=" .. code_txt(TYPE_TXT, tcode(okx, k1)))
+    add("V=" .. vk(okx, v1))
+    local oki1, i1 = false, nil
+    if fs ~= nil then
+        oki1, i1 = try(function () return fs[1] end)
+    end
+    add("I1=" .. vk(oki1, i1))
+    local okin, iN = false, nil
+    if fs ~= nil and nn ~= nil and nn > 0 then
+        okin, iN = try(function () return fs[nn] end)
+    end
+    add("IN=" .. vk(okin, iN))
 elseif mode == 4 then
     value_of("OT0", d.f.open_time, 0)
     value_of("OT1", d.f.open_time, 1)
@@ -273,7 +319,7 @@ for i, c in ipairs(ALPHA) do
 end
 
 local cur = nil
-if mode <= 4 and pos % dsp == 0 then
+if mode ~= 5 and pos % dsp == 0 then
     local slot = pos // dsp + 1
     if slot <= #line then
         local c = line:sub(slot, slot)
@@ -294,7 +340,7 @@ for i = 1, #ALPHA do
     CS[i] = s
 end
 
-if mode <= 4 then
+if mode ~= 5 then
     local f0, f2 = make_series(), make_series()
     f0:set(0)
     f2:set(2)
