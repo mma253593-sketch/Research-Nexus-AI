@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.1.0 — V1 with two fixes (`qcs/v1/`)
+
+* RSI score is no longer lower for RSI 74–78 (PUT: 22–26) than for RSI 51 (audit D1). Filters unchanged.
+* Pivot S/R: strict left-side tie rule (no duplicate level from a flat top/bottom, D3) and tick-safe
+  `make_series` memory instead of `value_when` (D4).
+* Measured vs V1 (synthetic, 6 datasets): 295 of 319 signal bars identical, 17 higher score, 2 lower,
+  3 new, 2 removed; duplicate levels on 0.10-quantized prices 13.5% → 1.5% of bars.
+* Tests: `qcs/test/run_tests_v1.lua` (14 checks) run by `qcs/build.sh --test`.
+
 ## 3.0.0 — Precision Fast Entry (M1, 1-minute expiry)
 
 Base: V1 (chosen by the user). V2 is archived unchanged in `qcs/archive/v2/`.
