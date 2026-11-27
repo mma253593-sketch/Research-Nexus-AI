@@ -25,8 +25,9 @@ instrument { name = "Resolution Diagnostic", short_name = "RES-DIAG", overlay = 
 
 input_group {
     "Diagnostic",
-    view     = input (1, "View 1=Status rows 2=Close 3=OpenTime", input.integer, 1, 3),
-    repeat_n = input (30, "Status: repeat labels every N bars", input.integer, 1, 1000),
+    view     = input (1, "View 1=Type labels 2=Close 3=OpenTime", input.integer, 1, 3),
+    group    = input (1, "Labels 1=Chart+resolution 2=security()", input.integer, 1, 2),
+    spacing  = input (8, "Bars between labels", input.integer, 1, 100),
     do_print = input (1, "Print log 1=on 0=off", input.integer, 0, 1)
 }
 
@@ -210,6 +211,7 @@ local function probe(res)
     end
     local ok3, cv = try(get_value, cs)
     local ok4, ov = try(get_value, os_)
+    d.cv, d.ov, d.ok3, d.ok4 = cv, ov, ok3, ok4
     d.c_raw  = ok3 and show(cv) or ("get_value error " .. show(cv))
     d.ot_raw = ok4 and show(ov) or ("get_value error " .. show(ov))
     d.c  = ok3 and num(cv) or nil
@@ -256,122 +258,136 @@ elseif view == 3 then
 end
 
 -- ------------------------------------------------------------------
--- Status rows (View 1). One row per item, so labels never overlap:
---   row 6 RES (resolution)   row 5 BAR (bar timestamps)
---   row 3 SEC 1m   row 2 SEC 5m   row 1 SEC 15m
--- A label is drawn only when the state changes from the previous bar,
--- or every `repeat_n` bars, so the latest state is visible near the
--- right edge without covering every candle.
--- RES codes: 1 "1m"  2 other documented string  3 other string
---            4 callable, res("1m")==true  5 callable, other result
---            6 callable, call error  7 nil  8 other type
--- SEC codes: 1 OK  2 ERR (call raised)  3 NIL (no security / no
---            ticker / returned nil)  4 NOFLD (no close or open_time)
---            5 NAN (value not a number on this bar)
--- BAR codes: 1 1m  2 5m  3 15m  0 unknown
+-- Type labels (View 1). Each label = "<item> <what get_value returned>":
+--   NUM  a number            NAN  a number that is NaN
+--   NIL  nil (or the field/series does not exist)
+--   OTH  another Lua type    ERR  the call raised an error
+-- Items are shown one at a time, `spacing` bars apart, on two
+-- alternating rows, so the text of different items never overlaps.
+-- group 1: RES (type of resolution), CH close, CH open_time,
+--          CH open_time[1], CH close_time   (chart built-in series)
+-- group 2: 1m/5m/15m close and open_time from security()
 -- ------------------------------------------------------------------
-local res_code = 8
-if res_type == "string" then
-    if e1 then
-        res_code = 1
-    elseif DOC_RES[resolution] then
-        res_code = 2
-    else
-        res_code = 3
-    end
-elseif callable then
-    if e2_val == true then
-        res_code = 4
-    elseif e2_txt:sub(1, 5) == "ERROR" then
-        res_code = 6
-    else
-        res_code = 5
-    end
-elseif resolution == nil then
-    res_code = 7
-end
-local bar_code = ({ ["1m"] = 1, ["5m"] = 2, ["15m"] = 3 })[bar_tf] or 0
+local K_NUM, K_NAN, K_NIL, K_OTH, K_ERR = 1, 2, 3, 4, 5
+local KTXT = { "NUM", "NAN", "NIL", "OTH", "ERR" }
+local KCOL = { "#00E676", "#FFEA00", "#FF1744", "#FF9100", "#FF1744" }
 
-local function snap(v)
-    local s = S(v)
-    return at1(s)
+local function kind(ok, v)
+    if not ok then
+        return K_ERR
+    end
+    if v == nil then
+        return K_NIL
+    end
+    if type(v) == "number" then
+        if v ~= v then
+            return K_NAN
+        end
+        return K_NUM
+    end
+    return K_OTH
 end
+
+local function gv(f)
+    local ok, v = try(f)
+    return kind(ok, v)
+end
+
+local RTYPES = { "string", "function", "nil", "number", "table", "userdata", "boolean" }
+local RTXT   = { "str", "fn", "nil", "num", "table", "udata", "bool" }
+local res_k = 0
+for i, n in ipairs(RTYPES) do
+    if res_type == n then
+        res_k = i
+    end
+end
+
+local function sec_kind(d, which)
+    if d.ttype == nil then
+        if d.code == 2 then
+            return K_ERR
+        end
+        return K_NIL
+    end
+    if which == "c" then
+        if d.ok3 == nil then
+            return K_NIL
+        end
+        return kind(d.ok3, d.cv)
+    end
+    if d.ok4 == nil then
+        return K_NIL
+    end
+    return kind(d.ok4, d.ov)
+end
+
+local items
+if group == 1 then
+    items = {
+        { "CH close",      gv(function () return get_value(close) end) },
+        { "CH open_time",  gv(function () return get_value(open_time) end) },
+        { "CH ot[1]",      gv(function () return get_value(open_time[1]) end) },
+        { "CH close_time", gv(function () return get_value(close_time) end) },
+    }
+else
+    items = {
+        { "1m close",  sec_kind(s1, "c") },  { "1m ot",  sec_kind(s1, "t") },
+        { "5m close",  sec_kind(s5, "c") },  { "5m ot",  sec_kind(s5, "t") },
+        { "15m close", sec_kind(s15, "c") }, { "15m ot", sec_kind(s15, "t") },
+    }
+end
+
 local cnt = make_series()
 local cnt_prev = at1(cnt)
 local bar_no = (cnt_prev or 0) + 1
 cnt:set(bar_no)
-local periodic = bar_no % repeat_n == 0
 
-local function show_row(code, prev_code)
-    return periodic or prev_code == nil or prev_code ~= code
+local n_slots = #items
+if group == 1 then
+    n_slots = n_slots + 1          -- slot 0 = RES
 end
-local p_res  = snap(res_code)
-local p_bar  = snap(bar_code)
-local p_s1   = snap(s1.code)
-local p_s5   = snap(s5.code)
-local p_s15  = snap(s15.code)
-local on_res = show_row(res_code, p_res)
-local on_bar = show_row(bar_code, p_bar)
-local on_s1  = show_row(s1.code, p_s1)
-local on_s5  = show_row(s5.code, p_s5)
-local on_s15 = show_row(s15.code, p_s15)
+local cycle = spacing * n_slots
+local slot = -1
+if bar_no % spacing == 0 then
+    slot = (bar_no % cycle) / spacing
+end
+local function ypos(j)
+    if j % 2 == 0 then
+        return 1
+    end
+    return 3
+end
 
--- series at a fixed row height, NaN (not drawn) otherwise
-local function row(on, ok, y)
+local function at_slot(j, on)
     local s = make_series()
-    if on and ok then
-        s:set(y)
+    if on and slot == j then
+        s:set(ypos(j))
     else
         s:set(NaN)
     end
     return s
 end
 
-local RED, YEL, GRN = "#FF1744", "#FFEA00", "#00E676"
-local function lab(series, name, color, text)
-    plot_shape (series, name, shape_style.circle, shape_size.tiny, color,
+local function lab(series, text, color)
+    plot_shape (series, text, shape_style.circle, shape_size.tiny, color,
                 shape_location.absolute, 0, text, color)
 end
 
-local R = {
-    row(on_res, res_code == 1, 6), row(on_res, res_code == 2, 6),
-    row(on_res, res_code == 3, 6), row(on_res, res_code == 4, 6),
-    row(on_res, res_code == 5, 6), row(on_res, res_code == 6, 6),
-    row(on_res, res_code == 7, 6), row(on_res, res_code == 8, 6),
-    row(on_bar, bar_code == 1, 5), row(on_bar, bar_code == 2, 5),
-    row(on_bar, bar_code == 3, 5), row(on_bar, bar_code == 0, 5)
-}
-local SEC = {}
-for i, d in ipairs({ { s1, on_s1, 3 }, { s5, on_s5, 2 }, { s15, on_s15, 1 } }) do
-    SEC[i] = {}
-    for c = 1, 5 do
-        SEC[i][c] = row(d[2], d[1].code == c, d[3])
-    end
-end
-local FR_lo, FR_hi = S(0), S(7)
-
 if view == 1 then
+    local FR_lo, FR_hi = S(0), S(4)
     plot (FR_lo, "frame 0", rgba(0,0,0,0), 1)
-    plot (FR_hi, "frame 7", rgba(0,0,0,0), 1)
-    lab (R[1],  "RES 1m",        GRN, "RES=1m")
-    lab (R[2],  "RES other doc", RED, "RES=doc not 1m")
-    lab (R[3],  "RES other str", YEL, "RES=str?")
-    lab (R[4],  "RES fn true",   GRN, "RES fn(1m)=true")
-    lab (R[5],  "RES fn other",  YEL, "RES fn(1m)=not true")
-    lab (R[6],  "RES fn error",  RED, "RES fn ERR")
-    lab (R[7],  "RES nil",       YEL, "RES=nil")
-    lab (R[8],  "RES other type",YEL, "RES type?")
-    lab (R[9],  "BAR 1m",  GRN, "BAR 1m")
-    lab (R[10], "BAR 5m",  GRN, "BAR 5m")
-    lab (R[11], "BAR 15m", GRN, "BAR 15m")
-    lab (R[12], "BAR ?",   YEL, "BAR ?")
-    local names = { "1m", "5m", "15m" }
-    local texts = { "OK", "ERR", "NIL", "NOFLD", "NAN" }
-    local cols  = { GRN, RED, RED, RED, YEL }
-    for i = 1, 3 do
-        for c = 1, 5 do
-            lab (SEC[i][c], "SEC " .. names[i] .. " " .. texts[c], cols[c],
-                 names[i] .. " " .. texts[c])
+    plot (FR_hi, "frame 4", rgba(0,0,0,0), 1)
+    local first = 0
+    if group == 1 then
+        for i = 1, #RTYPES do
+            lab (at_slot(0, res_k == i), "RES " .. RTXT[i], "#29B6F6")
+        end
+        lab (at_slot(0, res_k == 0), "RES other", "#29B6F6")
+        first = 1
+    end
+    for i, it in ipairs(items) do
+        for k = 1, 5 do
+            lab (at_slot(first + i - 1, it[2] == k), it[1] .. " " .. KTXT[k], KCOL[k])
         end
     end
 end
