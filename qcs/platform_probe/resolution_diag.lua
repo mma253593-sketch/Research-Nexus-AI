@@ -25,7 +25,8 @@ instrument { name = "Resolution Diagnostic", short_name = "RES-DIAG", overlay = 
 
 input_group {
     "Diagnostic",
-    view     = input (1, "View 1=Type labels 2=Close 3=OpenTime", input.integer, 1, 3),
+    view     = input (1, "View 1=Type labels 2=Close 3=OpenTime 4=Numbers", input.integer, 1, 4),
+    dsp      = input (2, "Numbers: bars per character", input.integer, 1, 20),
     group    = input (1, "Labels 1=Chart+resolution 2=security()", input.integer, 1, 2),
     spacing  = input (8, "Bars between labels", input.integer, 1, 100),
     do_print = input (1, "Print log 1=on 0=off", input.integer, 0, 1)
@@ -389,6 +390,107 @@ if view == 1 then
         for k = 1, 5 do
             lab (at_slot(first + i - 1, it[2] == k), it[1] .. " " .. KTXT[k], KCOL[k])
         end
+    end
+end
+
+-- ------------------------------------------------------------------
+-- Numbers (View 4): writes real values on the chart, one character
+-- per `dsp` bars, so they can be read without the Script Log.
+-- Each item = name label, then its digits. The value is captured on
+-- the first bar of the item's block and held (make_series) so all
+-- digits come from the same bar. "NA" = nil / NaN / not a number.
+--   RES  = resolution     STEP = open_time - open_time[1]
+--   LEN  = close_time - open_time   OT = chart open_time
+--   5mOT / 15mOT = open_time from security("5m" / "15m")
+-- ------------------------------------------------------------------
+local NUM_ITEMS = {
+    { "RES",   num(resolution) },
+    { "STEP",  e4 },
+    { "LEN",   e3 },
+    { "OT",    ch_ot },
+    { "5mOT",  num(s5.ov) },
+    { "15mOT", num(s15.ov) },
+}
+local W = 16                        -- slots per item (1 name + 15 chars)
+local blk = W * dsp
+local ncycle = blk * #NUM_ITEMS
+local pos = (bar_no - 1) % ncycle
+local cur_item = pos // blk + 1
+local cur_slot = -1
+if pos % dsp == 0 then
+    cur_slot = (pos % blk) // dsp
+end
+
+local held = {}
+for i, it in ipairs(NUM_ITEMS) do
+    local h = make_series()
+    local v
+    if (pos % blk) == 0 and cur_item == i then
+        v = it[2]
+    else
+        v = at1(h)
+    end
+    if v == nil then
+        h:set(NaN)
+    else
+        h:set(v)
+    end
+    held[i] = v
+end
+
+local function fmt(v)
+    if v == nil then
+        return "NA"
+    end
+    if v == math.floor(v) and math.abs(v) < 1e15 then
+        return string.format("%.0f", v)
+    end
+    return string.format("%.5f", v)
+end
+
+local txt = fmt(held[cur_item])
+local ch = nil
+if cur_slot >= 1 then
+    if txt == "NA" then
+        if cur_slot == 1 then
+            ch = "NA"
+        end
+    elseif cur_slot <= #txt then
+        ch = txt:sub(cur_slot, cur_slot)
+    end
+end
+
+local function at_if(cond)
+    local s = make_series()
+    if cond then
+        s:set(1)
+    else
+        s:set(NaN)
+    end
+    return s
+end
+
+local CHARS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", "NA" }
+local CH_S = {}
+for i, c in ipairs(CHARS) do
+    CH_S[i] = at_if(ch == c)
+end
+local NAME_S = {}
+for i = 1, #NUM_ITEMS do
+    NAME_S[i] = at_if(cur_slot == 0 and cur_item == i)
+end
+
+if view == 4 then
+    local FR_lo, FR_hi = S(0), S(2)
+    plot (FR_lo, "frame 0", rgba(0,0,0,0), 1)
+    plot (FR_hi, "frame 2", rgba(0,0,0,0), 1)
+    for i, it in ipairs(NUM_ITEMS) do
+        plot_shape (NAME_S[i], it[1], shape_style.square, shape_size.tiny, "#29B6F6",
+                    shape_location.absolute, 0, it[1] .. "=", "#29B6F6")
+    end
+    for i, c in ipairs(CHARS) do
+        plot_shape (CH_S[i], "char " .. c, shape_style.circle, shape_size.tiny, "#FFFFFF",
+                    shape_location.absolute, 0, c, "#FFFFFF")
     end
 end
 
