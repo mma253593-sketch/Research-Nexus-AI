@@ -73,4 +73,7 @@ if dir ~= 0 and prev_age < v2_cooldown then
     dir, WAIT_REASON = 0, "COOLDOWN"
 end
 if dir ~= 0 then SIG_DIR, SIG_SCORE, SIG_SETUP = dir, V2.score, V2.setup or "" end
+-- setup code for the markers: 1 pullback, 2 trend, 3 breakout, 4 range (signed by side)
+local KIND = { PULLBACK_CONTINUATION = 1, TREND_CONTINUATION = 2, BREAKOUT_CONFIRMATION = 3, RANGE_REJECTION = 4 }
+SIG_KIND = (KIND[SIG_SETUP] or 0) * SIG_DIR
 v2_age:set (SIG_DIR ~= 0 and 0 or prev_age + 1)

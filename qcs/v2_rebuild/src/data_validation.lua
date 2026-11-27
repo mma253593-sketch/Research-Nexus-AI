@@ -130,10 +130,11 @@ function M.prepare (input, cfg)
     -- M5 context: provided or aggregated from clock-aligned M1 buckets
     local P5 = d.m5_period
     local agg = M.aggregate_m5 (win, now, cfg)
-    local use_provided = input.m5 ~= nil and d.m5_source ~= "aggregate"
-    if d.m5_source == "provided" and input.m5 == nil then add (errs, "M5_MISSING") end
     local m5 = agg
     res.m5_source = "aggregate"
+    -- @qcs-strip-begin  (QCS never supplies M5 candles: provided-M5 path is offline only)
+    local use_provided = input.m5 ~= nil and d.m5_source ~= "aggregate"
+    if d.m5_source == "provided" and input.m5 == nil then add (errs, "M5_MISSING") end
     if use_provided then
         local p5, st5 = M.closed_candles (input.m5, P5, now, cfg, "M5_", errs, warns)
         res.stats.m5 = st5
@@ -154,6 +155,7 @@ function M.prepare (input, cfg)
             end
         end
     end
+    -- @qcs-strip-end
     -- bound the M5 history and check alignment with `now`
     if #m5 > 200 then m5 = util.slice (m5, #m5 - 199, #m5) end
     res.m5 = m5

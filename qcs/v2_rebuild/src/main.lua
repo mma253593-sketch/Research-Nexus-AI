@@ -91,6 +91,7 @@ function M.evaluate (input, cfg)
     return finish (p)
 end
 
+-- @qcs-strip-begin  (the QCS adapter implements the cooldown with make_series)
 --- sequential runner: identical to evaluate() plus a deterministic cooldown
 --- (bounded state: the time of the last emitted signal only)
 function M.new_runner (cfg)
@@ -113,4 +114,5 @@ function M.new_runner (cfg)
     return self
 end
 
+-- @qcs-strip-end
 return M

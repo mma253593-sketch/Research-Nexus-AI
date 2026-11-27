@@ -16,7 +16,8 @@ This directory is isolated: it does not modify `qcs/v1` (V1.2), `qcs/src` and
 |---|---|
 | 10 modules + config + QCS adapter | Implemented |
 | Isolated build (`scripts/build.sh`) | Implemented, passes |
-| Automated tests (82 cases, 9 files) | Executed, **82 passed / 0 failed** (Lua 5.3.6) |
+| Automated tests (83 cases, 9 files) | Executed, **83 passed / 0 failed** (Lua 5.3.6) |
+| Paste-ready QCS scripts ≤ 25,000 characters | Enforced by the build and a test (chart 24,738 / panel 24,120) |
 | Temporal integrity (no look-ahead / no repaint / no hidden state) | Tested, passed |
 | QCS bundle reproduces the pure engine in the offline QCS mock | Tested, passed |
 | Backtest / evaluation framework, V1.2 comparison | Implemented, tested on synthetic data only |
@@ -27,7 +28,7 @@ This directory is isolated: it does not modify `qcs/v1` (V1.2), `qcs/src` and
 
 ```bash
 sudo apt-get install lua5.3                     # Lua 5.3 interpreter + luac5.3
-qcs/v2_rebuild/scripts/build.sh --test          # syntax, bundle, 82 tests, protected-path check
+qcs/v2_rebuild/scripts/build.sh --test          # syntax, bundle (<= 25,000 chars), 83 tests, protected-path check
 lua5.3 qcs/v2_rebuild/eval/backtest.lua --csv xauusd_m1.csv --payout 0.82 --out report.md
 ```
 
@@ -147,24 +148,38 @@ Every WAIT carries reason codes, for example `NO_QUALIFIED_SETUP` followed by
 
 ## QCS installation (paste-ready scripts in `dist/`)
 
-| File | Use |
-|---|---|
-| `dist/XAUUSD_Smart_Entry_V2_0_Main.lua` | chart overlay: CALL/PUT arrows on the entry candle + setup marker |
-| `dist/XAUUSD_Smart_Entry_V2_0_Panel.lua` | separate pane: CALL/PUT score, regime code, decision |
-| `dist/XAUUSD_Smart_Entry_V2_0_Mini.lua` | Main without comments/extra whitespace (46 K characters) |
+| File | Use | Size |
+|---|---|---|
+| `dist/XAUUSD_Smart_Entry_V2_0.lua` | chart overlay: CALL/PUT arrows on the entry candle + setup marker (PB pullback, TR trend, BO breakout, RG range) | 24,738 characters |
+| `dist/XAUUSD_Smart_Entry_V2_0_Panel.lua` | separate pane: CALL/PUT score, regime code, decision | 24,120 characters |
+| `dist/readable/XAUUSD_Smart_Entry_V2_0_Readable.lua` | the same program with comments and original names — **for reading only, too long to paste** | ~68,000 characters |
 
 1. Open XAUUSD on M1 → Indicators → Scripts → Add manually → paste → Save → Add to chart.
 2. Wait for at least 200 closed candles. Enter at the **open** of an arrow candle, expiry 1 minute.
+
+**Size limit (25,000 characters).** `scripts/build.lua` produces the paste-ready scripts in
+four behaviour-preserving steps:
+1. **Bundle** the QCS variant of the sources. Regions marked `@qcs-strip` hold offline-only code:
+   the full config schema, the JSON and diagnostics detail, the sequential runner and the
+   provided-M5 path. They are removed, and lines marked `--@qcs:` are enabled instead.
+2. **Minify**: remove comments and redundant whitespace.
+3. **Shrink**: rename identifiers and internal ALL-CAPS codes consistently. Lua and QCS API
+   names, chart labels and the output globals are never renamed.
+4. **Join** the engine lines. The QCS adapter and views keep one statement per line.
+
+The build fails if a paste-ready script exceeds 25,000 characters. `test/test_qcs_bundle.lua`
+checks that:
+* the scripts are up to date with `src/`, byte for byte;
+* the chart script reproduces the pure engine bar by bar in the offline QCS mock;
+* the readable bundle and the shrunk script give identical outputs;
+* the lean QCS config check agrees with the full validator for every value the QCS inputs allow;
+* the scripts stay under the size limit.
 
 **Timestamps in QCS.** No QCS timestamp series has been verified, so the default input
 `Timestamps = 1` uses the bar index. Diagnostics then report `TIME_SOURCE = INDEX_PROXY`, and
 in this mode M5 context comes from 5-bar groups that are not clock-aligned, and missing candles
 cannot be detected. `Timestamps = 2` reads a `time` series only if the runtime defines one,
 and otherwise reports `INDEX_PROXY_FALLBACK`.
-
-**Paste size.** The repository documents 24,790 characters as a size known to paste
-successfully. Mini is about 46 K characters, and the actual QCS limit is unverified. If the
-paste fails, that is the first thing to check.
 
 ## Backtesting
 
@@ -198,8 +213,8 @@ lua5.3 qcs/v2_rebuild/eval/backtest.lua --csv FILE [--payout P] [--tie loss|push
    stability, and none were fitted to win rate.
 2. On synthetic fixtures the engine signals about 10 times per 1,000 M1 candles. Real-data
    frequency is unknown.
-3. The engine has not been run on the live QCS runtime. Two open questions are the paste-size
-   limit and the base-library functions beyond `math`/`ipairs`/`pairs`.
+3. The engine has not been run on the live QCS runtime. The open question is the base-library
+   functions beyond `math`/`ipairs`/`pairs`.
 4. In QCS's default index-timestamp mode, M5 context is approximate and missing candles cannot
    be detected.
 5. Candle-level expiry model: real fills happen seconds after the open, at the broker's price.
@@ -213,8 +228,8 @@ lua5.3 qcs/v2_rebuild/eval/backtest.lua --csv FILE [--payout P] [--tie loss|push
 config/default_config.lua   all parameters (validated)
 src/                        engine modules (+ src/qcs/ adapter and views)
 scripts/build.sh            isolated build + tests + protected-path check
-scripts/build.lua           bundler / minifier → dist/
+scripts/build.lua           bundler / minifier / shrinker → dist/ (fails above 25,000 characters)
 test/                       run_all.lua, 9 test files, fixtures.lua (synthetic), golden.lua
 eval/                       backtest.lua, metrics.lua, csv.lua, results/
-dist/                       generated QCS scripts (do not edit)
+dist/                       generated paste-ready QCS scripts; dist/readable/ for review (do not edit)
 ```

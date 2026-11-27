@@ -18,6 +18,7 @@ local function num (x)
     return util.round (x, 4)
 end
 
+-- @qcs-strip-begin
 local function side_record (sd)
     if sd == nil then return nil end
     local rec = { score = 0, setup = "NONE", candidates = {} }
@@ -35,6 +36,7 @@ local function side_record (sd)
     end
     return rec
 end
+-- @qcs-strip-end
 
 function M.build (p)
     local cfg, dv = p.cfg, p.data
@@ -54,6 +56,7 @@ function M.build (p)
         r.regime = { confirmed = p.regime.regime, raw = p.regime.raw, sub = p.regime.sub, direction = p.regime.direction,
                      atr_ratio = num (m.atr_ratio), er = num (m.er), slope = num (m.slope), ema_crosses = m.crosses }
     end
+    -- @qcs-strip-begin  (QCS has no text API: detailed sections are offline only)
     if p.trend then
         local t = p.trend
         r.m5_context = { bias = t.m5.bias, strength = num (t.m5.strength), available = t.m5.available }
@@ -79,11 +82,15 @@ function M.build (p)
         r.profile = { name = p.profile.name, tradable = p.profile.tradable, setups = p.profile.setups,
                       min_score = p.profile.min_score, reason = p.profile.reason }
     end
+    -- @qcs-strip-end
     r.selected_profile = p.selected and p.selected.setup or (p.profile and not p.profile.tradable and "DEFENSIVE" or "NONE")
+    -- @qcs-strip-begin
     if p.sides then r.call, r.put = side_record (p.sides[1]), side_record (p.sides[-1]) end
+    -- @qcs-strip-end
     return r
 end
 
+-- @qcs-strip-begin  (JSON / summary: offline tooling only)
 -- ----------------------------- JSON ---------------------------------
 local function esc (s)
     return (s:gsub ('[%c"\\]', function (c)
@@ -131,4 +138,5 @@ function M.summary (r)
         table.concat (r.reasons or {}, "|"))
 end
 
+-- @qcs-strip-end
 return M

@@ -13,6 +13,8 @@ local M = {}
 
 M.SETUPS = { "PULLBACK_CONTINUATION", "TREND_CONTINUATION", "BREAKOUT_CONFIRMATION", "RANGE_REJECTION" }
 
+-- @qcs-strip-begin  (full schema validation; replaced in the QCS bundle by the
+-- lean check below, see README "QCS build". Defaults are fully validated by tests.)
 -- { min, max, integer? } for every numeric leaf. Unknown keys are errors.
 local NUM = {
     data = {
@@ -149,6 +151,19 @@ function M.validate (cfg)
     table.sort (errs)
     return #errs == 0, errs
 end
+
+-- @qcs-strip-end
+-- In the QCS bundle only data.m1_window and runner.cooldown_bars can differ from
+-- the fully validated defaults (they come from bounded QCS inputs); they are
+-- re-checked here. test_qcs_bundle.lua proves agreement with the full validator.
+--@qcs: function M.validate (cfg)
+--@qcs:     local d = type (cfg) == "table" and cfg.data
+--@qcs:     local r = type (cfg) == "table" and cfg.runner
+--@qcs:     local ok = type (d) == "table" and type (r) == "table" and util.finite (d.m1_window)
+--@qcs:         and d.m1_window % 1 == 0 and d.m1_window >= d.min_m1_bars and d.m1_window <= 2000
+--@qcs:         and util.finite (r.cooldown_bars) and r.cooldown_bars % 1 == 0 and r.cooldown_bars >= 0 and r.cooldown_bars <= 100
+--@qcs:     return ok, ok and {} or { "CONFIG_INVALID" }
+--@qcs: end
 
 local function merge (base, over, path, errs)
     for _, k in ipairs (util.sorted_keys (over)) do
