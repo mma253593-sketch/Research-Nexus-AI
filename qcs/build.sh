@@ -36,11 +36,11 @@ build_v1 () {
     echo "built v1/scripts/$out ($(wc -l < "v1/scripts/$out") lines)"
 }
 mkdir -p v1/scripts
-build_v1 "XAUUSD_Smart_Entry_V1_1_Main.lua" \
-  'instrument { name = "XAUUSD Smart Entry V1.1", short_name = "XAU-SE1.1", overlay = true }' \
+build_v1 "XAUUSD_Smart_Entry_V1_2_Main.lua" \
+  'instrument { name = "XAUUSD Smart Entry V1.2", short_name = "XAU-SE1.2", overlay = true }' \
   "view_main.lua"
-build_v1 "XAUUSD_Smart_Entry_V1_1_Panel.lua" \
-  'instrument { name = "XAUUSD Smart Entry V1.1 Panel", short_name = "XAU-SE1.1 Score", overlay = false }' \
+build_v1 "XAUUSD_Smart_Entry_V1_2_Panel.lua" \
+  'instrument { name = "XAUUSD Smart Entry V1.2 Panel", short_name = "XAU-SE1.2 Score", overlay = false }' \
   "view_panel.lua"
 
 # Compact = the Main script with layout-only compression (same code, fewer lines)
@@ -48,8 +48,8 @@ if command -v lua5.3 >/dev/null 2>&1; then
     lua5.3 tools/compact.lua scripts/XAUUSD_Smart_Entry_Main.lua scripts/XAUUSD_Smart_Entry_Compact.lua
     # Mini = Compact with whitespace removed (fits the V1 size: <= 24,790 characters)
     lua5.3 tools/minify.lua scripts/XAUUSD_Smart_Entry_Compact.lua scripts/XAUUSD_Smart_Entry_Mini.lua
-    lua5.3 tools/compact.lua v1/scripts/XAUUSD_Smart_Entry_V1_1_Main.lua v1/scripts/XAUUSD_Smart_Entry_V1_1_Compact.lua
-    lua5.3 tools/minify.lua v1/scripts/XAUUSD_Smart_Entry_V1_1_Compact.lua v1/scripts/XAUUSD_Smart_Entry_V1_1_Mini.lua
+    lua5.3 tools/compact.lua v1/scripts/XAUUSD_Smart_Entry_V1_2_Main.lua v1/scripts/XAUUSD_Smart_Entry_V1_2_Compact.lua
+    lua5.3 tools/minify.lua v1/scripts/XAUUSD_Smart_Entry_V1_2_Compact.lua v1/scripts/XAUUSD_Smart_Entry_V1_2_Mini.lua
 else
     echo "lua5.3 not found: Compact script not regenerated" >&2
 fi

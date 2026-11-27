@@ -1,4 +1,4 @@
-instrument { name = "XAUUSD Smart Entry V1.1", short_name = "XAU-SE1.1", overlay = true }
+instrument { name = "XAUUSD Smart Entry V1.2", short_name = "XAU-SE1.2", overlay = true }
 -- Generated from qcs/v1/src (core.lua + view_main.lua). Edit the sources, then run qcs/build.sh.
 input_group { "Trend (EMA)",
     ema_fast_len = input (9,  "EMA Fast", input.integer, 1, 200), ema_mid_len  = input (21, "EMA Mid",  input.integer, 1, 300),
@@ -14,8 +14,9 @@ input_group { "Volatility (Bollinger / ATR)",
     bb_len        = input (20,   "BB Period",                    input.integer, 2, 200), bb_mult       = input (2.0,  "BB Deviation",                 input.double, 0.5, 5, 0.1),
     atr_len       = input (14,   "ATR Period",                   input.integer, 1, 100), atr_base_len  = input (100,  "ATR Baseline Period",          input.integer, 10, 500),
     squeeze_ratio = input (0.75, "Squeeze: BB width < avg x",    input.double, 0.1, 1.5, 0.05), flat_atr      = input (0.25, "Flat: EMA Mid slope < ATR x",  input.double, 0, 2, 0.05),
-    spike_mult    = input (2.8,  "Spike: candle range > ATR x",  input.double, 1, 10, 0.1),
-    hot_ratio     = input (1.9,  "Hot: ATR > baseline x",        input.double, 1, 5, 0.1)
+    spike_mult    = input (2.8,  "Spike: candle range > ATR x",  input.double, 1, 10, 0.1), hot_ratio     = input (1.9,  "Hot: ATR > baseline x",        input.double, 1, 5, 0.1),
+    er_len        = input (20,   "Sideways: efficiency ratio period", input.integer, 5, 100), er_side       = input (0.15, "Sideways: efficiency ratio <",  input.double, 0, 1, 0.01),
+    side_confirm  = input (2,    "Sideways change confirm (bars)", input.integer, 1, 10)
 }
 input_group { "Support / Resistance",
     pivot_len    = input (5,   "Pivot strength (bars each side)", input.integer, 2, 20), range_len    = input (50,  "Range lookback (bars)",           input.integer, 10, 300),
@@ -31,7 +32,8 @@ rsi_val = rsi (close, rsi_len); macd_fast_ma = ema (close, macd_fast_len); macd_
 macd_line    = macd_fast_ma - macd_slow_ma; macd_sig     = ema (macd_line, macd_sig_len); macd_hist    = macd_line - macd_sig
 bb_mid       = sma (close, bb_len); bb_dev       = stdev (close, bb_len) * bb_mult; bb_up        = bb_mid + bb_dev
 bb_lo        = bb_mid - bb_dev; bb_width     = (bb_up - bb_lo) / bb_mid; bb_width_avg = sma (bb_width, bb_len * 3)
-atr_val  = rma (tr, atr_len); atr_base = sma (atr_val, atr_base_len); clv       = (close - low) / max (high - low, 0.0000001)
+atr_val  = rma (tr, atr_len); atr_base = sma (atr_val, atr_base_len)
+er_val    = abs (change (close, er_len)) / sum (abs (change (close)), er_len); clv       = (close - low) / max (high - low, 0.0000001)
 clv_avg   = sma (clv, 5); piv_win_hi = highest (high, pivot_len); piv_win_lo = lowest  (low,  pivot_len)
 rng_hi     = highest (high, range_len); rng_lo     = lowest  (low,  range_len)
 local function num (s, d)
@@ -65,13 +67,13 @@ end
 res_lvl  = make_series (); res_lvl2 = make_series (); sup_lvl  = make_series ()
 sup_lvl2 = make_series (); remember (res_lvl, res_lvl2, pivot (high, piv_win_hi, 1)); remember (sup_lvl, sup_lvl2, pivot (low, piv_win_lo, -1))
 bar_count = make_series (); bar_count:set (num (bar_count[1], 0) + 1); sig_age = make_series ()
-local O1, H1, L1, C1 = num (open[1]), num (high[1]), num (low[1]), num (close[1])
+side_state = make_series (); side_run   = make_series (); local O1, H1, L1, C1 = num (open[1]), num (high[1]), num (low[1]), num (close[1])
 local O2, H2, L2, C2 = num (open[2]), num (high[2]), num (low[2]), num (close[2])
 local EF1, EM1, ES1 = num (ema_f[1]), num (ema_m[1]), num (ema_s[1]); local EM4, ES4      = num (ema_m[4]), num (ema_s[4])
 local R1, R2        = num (rsi_val[1]), num (rsi_val[2]); local HI1, HI2      = num (macd_hist[1]), num (macd_hist[2])
 local ML1           = num (macd_line[1]); local ATR1, ATR2    = num (atr_val[1]), num (atr_val[2]); local ATRB1         = num (atr_base[1])
-local BW1, BWA1     = num (bb_width[1]), num (bb_width_avg[1]); local CLV1          = num (clv_avg[1], 0.5)
-local RES1, RES2 = num (res_lvl), num (res_lvl2); local SUP1, SUP2 = num (sup_lvl), num (sup_lvl2)
+local BW1, BWA1     = num (bb_width[1]), num (bb_width_avg[1]); local ER1           = num (er_val[1], 0)
+local CLV1          = num (clv_avg[1], 0.5); local RES1, RES2 = num (res_lvl), num (res_lvl2); local SUP1, SUP2 = num (sup_lvl), num (sup_lvl2)
 local RHI2, RLO2 = num (rng_hi[2]), num (rng_lo[2])
 local warm_need = math.max (ema_slow_len, range_len, atr_base_len, bb_len * 3) + 2 * pivot_len + 5
 local data_ok = num (bar_count, 0) > warm_need
@@ -193,7 +195,12 @@ end
 local prev_age = num (sig_age[1], 999)
 if data_ok then
     squeeze  = BW1 < BWA1 * squeeze_ratio; local flat     = math.abs (EM1 - EM4) < flat_atr * ATR1
-    local tangled  = math.abs (EF1 - ES1) < 0.3 * ATR1; sideways = flat and (squeeze or tangled)
+    local tangled  = math.abs (EF1 - ES1) < 0.3 * ATR1
+    local raw = (flat and (squeeze or tangled))
+        or (ER1 < er_side and math.abs (ES1 - ES4) < 0.12 * ATR1)
+    local st, run = num (side_state[1], 0), num (side_run[1], 0); run = ((raw and 1 or 0) ~= st) and (run + 1) or 0
+    if run >= side_confirm then st, run = (raw and 1 or 0), 0 end
+    side_state:set (st); side_run:set (run); sideways = st == 1
     abnormal = (H1 - L1) > spike_mult * ATR2 or ATR1 > hot_ratio * ATRB1; local bull = evaluate (make_view (1))
     local bear = evaluate (make_view (-1)); BULL_SCORE = bull.score; BEAR_SCORE = bear.score
     if bull.bias and not sideways then TREND_DIR = 1
@@ -224,6 +231,8 @@ if data_ok then
     end
 end
 sig_age:set (SIG_DIR ~= 0 and 0 or prev_age + 1)
+if not data_ok then side_state:set (num (side_state[1], 0)); side_run:set (num (side_run[1], 0)) end
+SIDEWAYS_NOW = sideways
 local REASON_CODE = { ["NEAR-SR"] = 1, SIDEWAYS = 2, VOLATILE = 3, LATE = 4, OVEREXT = 5,
                       CONFLICT = 6, ["NO-PA"] = 7, ["LOW-SCORE"] = 8, COOLDOWN = 9, ["NO-TREND"] = 10 }
 wait_code = make_series (); local wcode = (REASON_CODE[WAIT_REASON] or 0) * WAIT_SIDE; wait_code:set (wcode)

@@ -7,12 +7,14 @@ local mock = require ("mock_qcs")
 local gen  = require ("datasets")
 
 local V1    = "qcs/eval/baseline/XAUUSD_Smart_Entry_V1_Main.lua"
-local MAIN  = "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_1_Main.lua"
-local PANEL = "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_1_Panel.lua"
-local MINI  = "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_1_Mini.lua"
+local MAIN  = "qcs/v1/release/XAUUSD_Smart_Entry_V1_1_Main.lua"
+local PANEL = "qcs/v1/release/XAUUSD_Smart_Entry_V1_1_Panel.lua"
+local MINI  = "qcs/v1/release/XAUUSD_Smart_Entry_V1_1_Mini.lua"
 local function read (p) local f = assert (io.open (p)); local s = f:read ("a"); f:close (); return s end
 local SRC = {}
-for _, p in ipairs ({ V1, MAIN, PANEL, MINI }) do SRC[p] = read (p) end
+local V12, V12P, V12M = "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_2_Main.lua",
+    "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_2_Panel.lua", "qcs/v1/scripts/XAUUSD_Smart_Entry_V1_2_Mini.lua"
+for _, p in ipairs ({ V1, MAIN, PANEL, MINI, V12, V12P, V12M }) do SRC[p] = read (p) end
 
 local failures, passes = 0, 0
 local function check (ok, msg)
@@ -47,6 +49,7 @@ local function run (file, bars, ticks)
         r.res1, r.res2 = E.val (E.env.res_lvl, T), E.val (E.env.res_lvl2, T)
         r.sup1, r.sup2 = E.val (E.env.sup_lvl, T), E.val (E.env.sup_lvl2, T)
         r.rsi1 = E.val (E.env.rsi_val, T - 1)
+        r.side = E.env.SIDEWAYS_NOW
         rec[T] = r
     end
     return rec, E, diff
@@ -194,6 +197,64 @@ do
     check (close == 0, "3-bar cooldown respected")
 end
 
+section ("V1.2: steadier sideways filter (vs V1.1)")
+do
+    for _, f in ipairs ({ V12, V12P, V12M }) do
+        local ok = os.execute ("luac5.3 -p " .. f .. " 2>/dev/null")
+        check (ok == true or ok == 0, "syntax " .. f)
+    end
+    local unexplained, changed, s11, s12, example = 0, 0, 0, 0, nil
+    local NEW12 = {}
+    for i, d in ipairs (DATA) do
+        local b = run (V12, d[2]); NEW12[i] = b
+        for T = 1, #d[2] do
+            local a = NEW[i][T]
+            if a.SIG_DIR ~= 0 then s11 = s11 + 1 end
+            if b[T].SIG_DIR ~= 0 then s12 = s12 + 1 end
+            if a.SIG_DIR ~= b[T].SIG_DIR or a.SIG_SCORE ~= b[T].SIG_SCORE then
+                changed = changed + 1
+                local why = false
+                for j = math.max (1, T - 60), T do if b[j].side then why = true; break end end
+                if not why then unexplained = unexplained + 1; example = example or (d[1] .. " bar " .. T) end
+            end
+        end
+    end
+    print (("        signals V1.1 %d -> V1.2 %d, %d signal bars changed"):format (s11, s12, changed))
+    check (unexplained == 0, "every signal change happens in or right after a V1.2 sideways period" .. (example and (" (" .. example .. ")") or ""))
+    -- ranging market: fewer signals; trends: signals kept
+    local function rate (file, bars, from) local r = run (file, bars); local n = 0
+        for T = from, #bars do if r[T].SIG_DIR ~= 0 then n = n + 1 end end; return n end
+    local rg = gen.range (1400, 202)
+    local a, b = rate (MAIN, rg, 301), rate (V12, rg, 301)
+    check (b < a, ("sideways market: %d -> %d signals"):format (a, b))
+    local up = gen.trend (1500, 21, 0.25)
+    local c, e = rate (MAIN, up, 301), rate (V12, up, 301)
+    check (e >= c * 0.5, ("strong uptrend: %d -> %d signals (kept >= 50%%)"):format (c, e))
+    local flips, side = 0, 0
+    for T = 200, #NEW12[1] do
+        if NEW12[1][T].side then side = side + 1 end
+        if NEW12[1][T].side ~= NEW12[1][T - 1].side then flips = flips + 1 end
+    end
+    print (("        sideways on %.0f%% of bars, %.1f state changes per 1000 bars"):format (100 * side / (#NEW12[1] - 199), 1000 * flips / (#NEW12[1] - 199)))
+    local _, _, td = run (V12, DATA[2][2], 4)
+    check (td == 0, "V1.2: 4 live ticks per bar -> " .. td .. " signal changes")
+    local diff = 0
+    for _, f in ipairs ({ V12P, V12M }) do
+        local r = run (f, DATA[1][2])
+        for T = 1, #r do for _, k in ipairs (FIELDS) do if r[T][k] ~= NEW12[1][T][k] then diff = diff + 1 end end end
+    end
+    check (diff == 0, "V1.2 Panel and Mini identical to Main")
+    check ((utf8.len (SRC[V12M]) or #SRC[V12M]) <= 25000, "V1.2 Mini " .. #SRC[V12M] .. " characters (<= 25,000)")
+    local low, close = 0, 0
+    for i in ipairs (DATA) do local last
+        for T, r in ipairs (NEW12[i]) do if r.SIG_DIR ~= 0 then
+            if r.SIG_SCORE < 70 then low = low + 1 end
+            if last and T - last <= 3 then close = close + 1 end
+            last = T end end
+    end
+    check (low == 0 and close == 0, "V1.2: score >= 70 and 3-bar cooldown hold")
+end
+
 print (("\n%d passed, %d failed"):format (passes, failures))
-print (failures == 0 and "ALL V1.1 TESTS PASSED" or "V1.1 TESTS FAILED")
+print (failures == 0 and "ALL V1.x TESTS PASSED" or "V1.x TESTS FAILED")
 os.exit (failures == 0 and 0 or 1)

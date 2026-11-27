@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.2.0 — steadier sideways filter (`qcs/v1/`, V1.1 frozen in `qcs/v1/release/`)
+
+* Sideways = V1 rule OR (efficiency ratio(20) < 0.15 and flat EMA50), changed only after 2 confirming bars.
+* Synthetic: signals 317 -> 298, ranging market 23 -> 18, strong uptrend unchanged; every signal change
+  occurs in or right after a V1.2 sideways period. 1-bar sideways flicker removed.
+
 ## 1.1.0 — V1 with two fixes (`qcs/v1/`)
 
 * RSI score is no longer lower for RSI 74–78 (PUT: 22–26) than for RSI 51 (audit D1). Filters unchanged.

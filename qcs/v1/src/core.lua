@@ -1,5 +1,6 @@
 -- =====================================================================
---  XAUUSD SMART ENTRY V1.1  —  CORE ANALYSIS ENGINE (shared by Main + Panel)
+--  XAUUSD SMART ENTRY V1.2  —  CORE ANALYSIS ENGINE (shared by Main + Panel)
+--  V1.2 = V1.1 + steadier sideways filter (efficiency ratio + 2-bar confirmation).
 --  V1.1 = V1 with two fixes only: monotonic RSI score, pivot S/R without
 --  duplicate levels (strict tie rule + tick-safe make_series memory).
 --  Quadcode Script (QCS, Lua 5.3 based) for the IQ Option script editor
@@ -41,7 +42,10 @@ input_group {
     squeeze_ratio = input (0.75, "Squeeze: BB width < avg x",    input.double, 0.1, 1.5, 0.05),
     flat_atr      = input (0.25, "Flat: EMA Mid slope < ATR x",  input.double, 0, 2, 0.05),
     spike_mult    = input (2.8,  "Spike: candle range > ATR x",  input.double, 1, 10, 0.1),
-    hot_ratio     = input (1.9,  "Hot: ATR > baseline x",        input.double, 1, 5, 0.1)
+    hot_ratio     = input (1.9,  "Hot: ATR > baseline x",        input.double, 1, 5, 0.1),
+    er_len        = input (20,   "Sideways: efficiency ratio period", input.integer, 5, 100),
+    er_side       = input (0.15, "Sideways: efficiency ratio <",  input.double, 0, 1, 0.01),
+    side_confirm  = input (2,    "Sideways change confirm (bars)", input.integer, 1, 10)
 }
 
 input_group {
@@ -85,6 +89,8 @@ atr_val  = rma (tr, atr_len)
 atr_base = sma (atr_val, atr_base_len)
 
 -- Close-location value of each candle (0 = closed at low, 1 = at high)
+-- V1.2: efficiency ratio = net move / path length (low = choppy, no direction)
+er_val    = abs (change (close, er_len)) / sum (abs (change (close)), er_len)
 clv       = (close - low) / max (high - low, 0.0000001)
 clv_avg   = sma (clv, 5)
 
@@ -147,6 +153,8 @@ bar_count = make_series ()
 bar_count:set (num (bar_count[1], 0) + 1)
 
 sig_age = make_series ()          -- bars since the last printed signal
+side_state = make_series ()       -- V1.2: confirmed sideways state (1/0)
+side_run   = make_series ()       -- V1.2: bars the raw state disagrees with it
 
 -- ------------------- SNAPSHOT OF THE CLOSED CANDLES -------------------
 local O1, H1, L1, C1 = num (open[1]), num (high[1]), num (low[1]), num (close[1])
@@ -160,6 +168,7 @@ local ML1           = num (macd_line[1])
 local ATR1, ATR2    = num (atr_val[1]), num (atr_val[2])
 local ATRB1         = num (atr_base[1])
 local BW1, BWA1     = num (bb_width[1]), num (bb_width_avg[1])
+local ER1           = num (er_val[1], 0)
 local CLV1          = num (clv_avg[1], 0.5)
 
 local RES1, RES2 = num (res_lvl), num (res_lvl2)
@@ -360,7 +369,16 @@ if data_ok then
     squeeze  = BW1 < BWA1 * squeeze_ratio
     local flat     = math.abs (EM1 - EM4) < flat_atr * ATR1
     local tangled  = math.abs (EF1 - ES1) < 0.3 * ATR1
-    sideways = flat and (squeeze or tangled)
+    -- V1.2: V1 rule OR choppy path with a flat EMA50; change only after
+    -- side_confirm consecutive closed bars (no flicker)
+    local raw = (flat and (squeeze or tangled))
+        or (ER1 < er_side and math.abs (ES1 - ES4) < 0.12 * ATR1)
+    local st, run = num (side_state[1], 0), num (side_run[1], 0)
+    run = ((raw and 1 or 0) ~= st) and (run + 1) or 0
+    if run >= side_confirm then st, run = (raw and 1 or 0), 0 end
+    side_state:set (st)
+    side_run:set (run)
+    sideways = st == 1
     abnormal = (H1 - L1) > spike_mult * ATR2 or ATR1 > hot_ratio * ATRB1
 
     local bull = evaluate (make_view (1))
@@ -411,6 +429,8 @@ if data_ok then
 end
 
 sig_age:set (SIG_DIR ~= 0 and 0 or prev_age + 1)
+if not data_ok then side_state:set (num (side_state[1], 0)); side_run:set (num (side_run[1], 0)) end
+SIDEWAYS_NOW = sideways
 
 -- Show a cancel reason only on the first bar of a streak (less clutter)
 local REASON_CODE = { ["NEAR-SR"] = 1, SIDEWAYS = 2, VOLATILE = 3, LATE = 4, OVEREXT = 5,
