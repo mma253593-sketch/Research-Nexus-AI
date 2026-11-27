@@ -25,7 +25,8 @@ instrument { name = "Resolution Diagnostic", short_name = "RES-DIAG", overlay = 
 
 input_group {
     "Diagnostic",
-    view     = input (1, "View 1=Status 2=Close 3=OpenTime", input.integer, 1, 3),
+    view     = input (1, "View 1=Status rows 2=Close 3=OpenTime", input.integer, 1, 3),
+    repeat_n = input (30, "Status: repeat labels every N bars", input.integer, 1, 1000),
     do_print = input (1, "Print log 1=on 0=off", input.integer, 0, 1)
 }
 
@@ -69,6 +70,15 @@ local function S(v)
         s:set(v)
     end
     return s
+end
+
+-- value of series s one chart bar back (nil if missing)
+local function at1(s)
+    local ok, v = try(function () return get_value(s[1]) end)
+    if ok then
+        return num(v)
+    end
+    return nil
 end
 
 local DOC_RES = { ["1s"]=1, ["5s"]=1, ["10s"]=1, ["15s"]=1, ["30s"]=1,
@@ -171,31 +181,31 @@ local glob_txt = "is_intrahour type=" .. type(is_intrahour)
 local function probe(res)
     local d = { res = res, ok = false, c = nil, ot = nil }
     if type(security) ~= "function" then
-        d.why = "UNKNOWN: security type=" .. type(security)
+        d.why, d.code = "UNKNOWN: security type=" .. type(security), 3
         return d
     end
     if current_ticker_id == nil then
-        d.why = "UNKNOWN: current_ticker_id is nil"
+        d.why, d.code = "UNKNOWN: current_ticker_id is nil", 3
         return d
     end
     local ok, t = try(security, current_ticker_id, res)
     if not ok then
-        d.why = "UNKNOWN: security error " .. show(t)
+        d.why, d.code = "UNKNOWN: security error " .. show(t), 2
         return d
     end
     if t == nil then
-        d.why = "UNKNOWN: security returned nil"
+        d.why, d.code = "UNKNOWN: security returned nil", 3
         return d
     end
     d.ttype = type(t)
     local okc, cs = try(function () return t.close end)
     local oko, os_ = try(function () return t.open_time end)
     if not okc or cs == nil then
-        d.why = "UNKNOWN: no .close field"
+        d.why, d.code = "UNKNOWN: no .close field", 4
         return d
     end
     if not oko or os_ == nil then
-        d.why = "UNKNOWN: no .open_time field"
+        d.why, d.code = "UNKNOWN: no .open_time field", 4
         return d
     end
     local ok3, cv = try(get_value, cs)
@@ -205,11 +215,11 @@ local function probe(res)
     d.c  = ok3 and num(cv) or nil
     d.ot = ok4 and num(ov) or nil
     if d.c == nil or d.ot == nil then
-        d.why = "UNKNOWN: close/open_time not a number on this bar"
+        d.why, d.code = "UNKNOWN: close/open_time not a number on this bar", 5
         return d
     end
     d.ok = true
-    d.why = "OK"
+    d.why, d.code = "OK", 1
     return d
 end
 
@@ -218,28 +228,9 @@ local s5  = probe("5m")
 local s15 = probe("15m")
 
 -- ------------------------------------------------------------------
--- 3. Plots (status: 1 = OK, 0 = UNKNOWN; NaN gap when unreadable)
+-- 3. Plots (View 2 = close, View 3 = timestamps; NaN gap when unreadable)
 -- ------------------------------------------------------------------
-local function okv(d)
-    if d.ok then
-        return 1
-    end
-    return 0
-end
-local function b01(b)
-    if b then
-        return 1
-    end
-    return 0
-end
-
-local P_v  = S(b01(verdict == "M1 CONFIRMED"))
 local B_e4 = S(e4)
-local P_e1 = S(b01(e1))
-local P_e2 = S(b01(e2_val == true))
-local P_s1 = S(okv(s1))
-local P_s5 = S(okv(s5))
-local P_s15 = S(okv(s15))
 local C_ch = S(ch_c)
 local C_1  = S(s1.c)
 local C_5  = S(s5.c)
@@ -250,19 +241,12 @@ local O_5  = S(s5.ot)
 local O_15 = S(s15.ot)
 local B_e3 = S(e3)
 
-if view == 1 then
-    plot (P_v,   "M1 CONFIRMED (1/0)", "#00E676", 2)
-    plot (P_e1,  "E1 res==1m",         "#FFFFFF", 1)
-    plot (P_e2,  "E2 res(1m)==true",   "#9E9E9E", 1)
-    plot (P_s1,  "SEC 1m OK",          "#BDBDBD", 1)
-    plot (P_s5,  "SEC 5m OK",          "#29B6F6", 1)
-    plot (P_s15, "SEC 15m OK",         "#FFA726", 1)
-elseif view == 2 then
+if view == 2 then
     plot (C_ch, "Chart close",    "#FFFFFF", 1)
     plot (C_1,  "SEC 1m close",   "#BDBDBD", 1)
     plot (C_5,  "SEC 5m close",   "#29B6F6", 2)
     plot (C_15, "SEC 15m close",  "#FFA726", 2)
-else
+elseif view == 3 then
     plot (O_ch, "Chart open_time",   "#FFFFFF", 1)
     plot (O_1,  "SEC 1m open_time",  "#BDBDBD", 1)
     plot (O_5,  "SEC 5m open_time",  "#29B6F6", 1)
@@ -271,16 +255,126 @@ else
     plot (B_e4, "E4 chart open_time step", "#76FF03", 1)
 end
 
+-- ------------------------------------------------------------------
+-- Status rows (View 1). One row per item, so labels never overlap:
+--   row 6 RES (resolution)   row 5 BAR (bar timestamps)
+--   row 3 SEC 1m   row 2 SEC 5m   row 1 SEC 15m
+-- A label is drawn only when the state changes from the previous bar,
+-- or every `repeat_n` bars, so the latest state is visible near the
+-- right edge without covering every candle.
+-- RES codes: 1 "1m"  2 other documented string  3 other string
+--            4 callable, res("1m")==true  5 callable, other result
+--            6 callable, call error  7 nil  8 other type
+-- SEC codes: 1 OK  2 ERR (call raised)  3 NIL (no security / no
+--            ticker / returned nil)  4 NOFLD (no close or open_time)
+--            5 NAN (value not a number on this bar)
+-- BAR codes: 1 1m  2 5m  3 15m  0 unknown
+-- ------------------------------------------------------------------
+local res_code = 8
+if res_type == "string" then
+    if e1 then
+        res_code = 1
+    elseif DOC_RES[resolution] then
+        res_code = 2
+    else
+        res_code = 3
+    end
+elseif callable then
+    if e2_val == true then
+        res_code = 4
+    elseif e2_txt:sub(1, 5) == "ERROR" then
+        res_code = 6
+    else
+        res_code = 5
+    end
+elseif resolution == nil then
+    res_code = 7
+end
+local bar_code = ({ ["1m"] = 1, ["5m"] = 2, ["15m"] = 3 })[bar_tf] or 0
+
+local function snap(v)
+    local s = S(v)
+    return at1(s)
+end
+local cnt = make_series()
+local cnt_prev = at1(cnt)
+local bar_no = (cnt_prev or 0) + 1
+cnt:set(bar_no)
+local periodic = bar_no % repeat_n == 0
+
+local function show_row(code, prev_code)
+    return periodic or prev_code == nil or prev_code ~= code
+end
+local p_res  = snap(res_code)
+local p_bar  = snap(bar_code)
+local p_s1   = snap(s1.code)
+local p_s5   = snap(s5.code)
+local p_s15  = snap(s15.code)
+local on_res = show_row(res_code, p_res)
+local on_bar = show_row(bar_code, p_bar)
+local on_s1  = show_row(s1.code, p_s1)
+local on_s5  = show_row(s5.code, p_s5)
+local on_s15 = show_row(s15.code, p_s15)
+
+-- series at a fixed row height, NaN (not drawn) otherwise
+local function row(on, ok, y)
+    local s = make_series()
+    if on and ok then
+        s:set(y)
+    else
+        s:set(NaN)
+    end
+    return s
+end
+
 local RED, YEL, GRN = "#FF1744", "#FFEA00", "#00E676"
-plot_shape (conditional(verdict == "M1 CONFIRMED"), "M1 CONFIRMED", shape_style.circle, shape_size.tiny, GRN, shape_location.top, 0, "M1 OK", GRN)
-plot_shape (conditional(verdict == "NOT M1"),  "NOT M1",  shape_style.xcross, shape_size.small, RED, shape_location.top, 0, "NOT M1", RED)
-plot_shape (conditional(verdict == "UNKNOWN"), "RES UNKNOWN", shape_style.xcross, shape_size.tiny, YEL, shape_location.top, 0, "RES ?", YEL)
-plot_shape (conditional(bar_tf == "1m"),  "BAR 1m",  shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 1m", GRN)
-plot_shape (conditional(bar_tf == "5m"),  "BAR 5m",  shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 5m", GRN)
-plot_shape (conditional(bar_tf == "15m"), "BAR 15m", shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 15m", GRN)
-plot_shape (conditional(bar_tf == "UNKNOWN"), "BAR unknown", shape_style.xcross, shape_size.tiny, YEL, shape_location.top, 0, "BAR ?", YEL)
-plot_shape (conditional(not s5.ok),  "5m unreadable",  shape_style.xcross, shape_size.tiny, RED, shape_location.bottom, 0, "5m ?", RED)
-plot_shape (conditional(not s15.ok), "15m unreadable", shape_style.xcross, shape_size.tiny, RED, shape_location.bottom, 0, "15m ?", RED)
+local function lab(series, name, color, text)
+    plot_shape (series, name, shape_style.circle, shape_size.tiny, color,
+                shape_location.absolute, 0, text, color)
+end
+
+local R = {
+    row(on_res, res_code == 1, 6), row(on_res, res_code == 2, 6),
+    row(on_res, res_code == 3, 6), row(on_res, res_code == 4, 6),
+    row(on_res, res_code == 5, 6), row(on_res, res_code == 6, 6),
+    row(on_res, res_code == 7, 6), row(on_res, res_code == 8, 6),
+    row(on_bar, bar_code == 1, 5), row(on_bar, bar_code == 2, 5),
+    row(on_bar, bar_code == 3, 5), row(on_bar, bar_code == 0, 5)
+}
+local SEC = {}
+for i, d in ipairs({ { s1, on_s1, 3 }, { s5, on_s5, 2 }, { s15, on_s15, 1 } }) do
+    SEC[i] = {}
+    for c = 1, 5 do
+        SEC[i][c] = row(d[2], d[1].code == c, d[3])
+    end
+end
+local FR_lo, FR_hi = S(0), S(7)
+
+if view == 1 then
+    plot (FR_lo, "frame 0", rgba(0,0,0,0), 1)
+    plot (FR_hi, "frame 7", rgba(0,0,0,0), 1)
+    lab (R[1],  "RES 1m",        GRN, "RES=1m")
+    lab (R[2],  "RES other doc", RED, "RES=doc not 1m")
+    lab (R[3],  "RES other str", YEL, "RES=str?")
+    lab (R[4],  "RES fn true",   GRN, "RES fn(1m)=true")
+    lab (R[5],  "RES fn other",  YEL, "RES fn(1m)=not true")
+    lab (R[6],  "RES fn error",  RED, "RES fn ERR")
+    lab (R[7],  "RES nil",       YEL, "RES=nil")
+    lab (R[8],  "RES other type",YEL, "RES type?")
+    lab (R[9],  "BAR 1m",  GRN, "BAR 1m")
+    lab (R[10], "BAR 5m",  GRN, "BAR 5m")
+    lab (R[11], "BAR 15m", GRN, "BAR 15m")
+    lab (R[12], "BAR ?",   YEL, "BAR ?")
+    local names = { "1m", "5m", "15m" }
+    local texts = { "OK", "ERR", "NIL", "NOFLD", "NAN" }
+    local cols  = { GRN, RED, RED, RED, YEL }
+    for i = 1, 3 do
+        for c = 1, 5 do
+            lab (SEC[i][c], "SEC " .. names[i] .. " " .. texts[c], cols[c],
+                 names[i] .. " " .. texts[c])
+        end
+    end
+end
 
 -- ------------------------------------------------------------------
 -- 4. Script log (every run = every bar, and possibly every tick)
@@ -289,7 +383,7 @@ local function line(d)
     return "SEC " .. d.res .. ": " .. d.why
         .. " table=" .. tostring(d.ttype)
         .. " close=" .. tostring(d.c_raw)
-        .. " open_time=" .. tostring(d.ot_raw)
+        .. " open_time=" .. tostring(d.ot_raw) .. " code=" .. tostring(d.code)
 end
 
 if do_print == 1 then
