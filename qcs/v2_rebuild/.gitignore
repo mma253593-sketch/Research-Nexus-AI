@@ -1,0 +1,3 @@
+eval/.tmp_*
+eval/results/*.jsonl
+!dist/
