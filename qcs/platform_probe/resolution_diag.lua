@@ -14,6 +14,8 @@
 --   E2  resolution("1m")           ONLY if resolution is callable; this is
 --                                  the docs' Syntax Format; raw result shown
 --   E3  close_time - open_time      chart bar length (documented series)
+--   E4  open_time - open_time[1]     step between chart bars
+--  BAR TF: 1m/5m/15m measured from E4 (+E3 agreement); separate marker.
 --  Verdict: M1 CONFIRMED only if E1 is true or E2 returns exactly true.
 --           NOT M1 only if resolution equals another documented string.
 --           Otherwise UNKNOWN + reason. E3 never confirms on its own.
@@ -106,6 +108,37 @@ local ch_c  = num(get_value(close))
 local e3 = nil
 if ch_ot ~= nil and ch_ct ~= nil then
     e3 = ch_ct - ch_ot
+end
+
+-- E4: open_time step between this chart bar and the previous one
+local ch_ot1 = nil
+do
+    local ok, v = try(function () return get_value(open_time[1]) end)
+    if ok then
+        ch_ot1 = num(v)
+    end
+end
+local e4 = nil
+if ch_ot ~= nil and ch_ot1 ~= nil then
+    e4 = ch_ot - ch_ot1
+end
+
+-- BAR timeframe: measured from the chart's own timestamps (real data,
+-- no resolution variable). Exact matches only, seconds or milliseconds.
+-- Needs E4 (step) to match AND E3 (length) to agree (= step or step-1)
+-- when E3 is available. A gap (market closed) makes E4 larger -> UNKNOWN.
+local BAR_TF = { [60]="1m", [300]="5m", [900]="15m",
+    [60000]="1m", [300000]="5m", [900000]="15m" }
+local bar_tf, bar_why = "UNKNOWN", ""
+if e4 == nil then
+    bar_why = "no open_time[1] on this bar"
+elseif BAR_TF[e4] == nil then
+    bar_why = "step " .. show(e4) .. " is not 1m/5m/15m (gap or other TF)"
+elseif e3 ~= nil and e3 ~= e4 and e3 ~= e4 - 1 then
+    bar_why = "step " .. show(e4) .. " but length " .. show(e3) .. " disagree"
+else
+    bar_tf = BAR_TF[e4]
+    bar_why = "step " .. show(e4) .. " length " .. show(e3)
 end
 
 local verdict, reason
@@ -201,6 +234,7 @@ local function b01(b)
 end
 
 local P_v  = S(b01(verdict == "M1 CONFIRMED"))
+local B_e4 = S(e4)
 local P_e1 = S(b01(e1))
 local P_e2 = S(b01(e2_val == true))
 local P_s1 = S(okv(s1))
@@ -234,12 +268,17 @@ else
     plot (O_5,  "SEC 5m open_time",  "#29B6F6", 1)
     plot (O_15, "SEC 15m open_time", "#FFA726", 1)
     plot (B_e3, "E3 chart close_time-open_time", "#00E676", 1)
+    plot (B_e4, "E4 chart open_time step", "#76FF03", 1)
 end
 
 local RED, YEL, GRN = "#FF1744", "#FFEA00", "#00E676"
 plot_shape (conditional(verdict == "M1 CONFIRMED"), "M1 CONFIRMED", shape_style.circle, shape_size.tiny, GRN, shape_location.top, 0, "M1 OK", GRN)
 plot_shape (conditional(verdict == "NOT M1"),  "NOT M1",  shape_style.xcross, shape_size.small, RED, shape_location.top, 0, "NOT M1", RED)
-plot_shape (conditional(verdict == "UNKNOWN"), "TF UNKNOWN", shape_style.xcross, shape_size.tiny, YEL, shape_location.top, 0, "TF ?", YEL)
+plot_shape (conditional(verdict == "UNKNOWN"), "RES UNKNOWN", shape_style.xcross, shape_size.tiny, YEL, shape_location.top, 0, "RES ?", YEL)
+plot_shape (conditional(bar_tf == "1m"),  "BAR 1m",  shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 1m", GRN)
+plot_shape (conditional(bar_tf == "5m"),  "BAR 5m",  shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 5m", GRN)
+plot_shape (conditional(bar_tf == "15m"), "BAR 15m", shape_style.square, shape_size.tiny, GRN, shape_location.top, 0, "BAR 15m", GRN)
+plot_shape (conditional(bar_tf == "UNKNOWN"), "BAR unknown", shape_style.xcross, shape_size.tiny, YEL, shape_location.top, 0, "BAR ?", YEL)
 plot_shape (conditional(not s5.ok),  "5m unreadable",  shape_style.xcross, shape_size.tiny, RED, shape_location.bottom, 0, "5m ?", RED)
 plot_shape (conditional(not s15.ok), "15m unreadable", shape_style.xcross, shape_size.tiny, RED, shape_location.bottom, 0, "15m ?", RED)
 
@@ -259,7 +298,9 @@ if do_print == 1 then
     print("RES-DIAG E1 resolution==\"1m\" -> " .. tostring(e1))
     print("RES-DIAG E2 resolution(\"1m\") -> " .. e2_txt)
     print("RES-DIAG E3 close_time-open_time -> " .. show(e3))
-    print("RES-DIAG VERDICT " .. verdict .. " (" .. reason .. ")")
+    print("RES-DIAG E4 open_time-open_time[1] -> " .. show(e4))
+    print("RES-DIAG VERDICT (resolution) " .. verdict .. " (" .. reason .. ")")
+    print("RES-DIAG BAR TF (timestamps) " .. bar_tf .. " (" .. bar_why .. ")")
     print("RES-DIAG " .. tf_txt .. " | " .. glob_txt)
     print("RES-DIAG current_ticker_id=" .. show(current_ticker_id)
         .. " security type=" .. type(security) .. " pcall=" .. tostring(HAS_PCALL))
