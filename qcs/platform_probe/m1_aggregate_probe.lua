@@ -196,6 +196,11 @@ plot_shape (conditional(view == 1 and A5.gap == true),   "M5 closed gap",  shape
 plot_shape (conditional(view == 1 and A15.full == true), "M15 closed ok",  shape_style.triangleup, shape_size.small, "#FFA726", shape_location.top, 0, "15OK", "#FFA726")
 plot_shape (conditional(view == 1 and A15.gap == true),  "M15 closed gap", shape_style.xcross, shape_size.small, "#FF1744", shape_location.top, 0, "15GAP", "#FF1744")
 
+-- Chart must be M1: P = 60 (seconds) or 60000 (ms). On another chart
+-- timeframe the "M5"/"M15" groups would be 5/15 bars of THAT timeframe.
+local not_m1 = P ~= nil and P ~= 60 and P ~= 60000
+plot_shape (conditional(not_m1), "Chart not M1", shape_style.xcross, shape_size.small, "#FF1744", shape_location.top, 0, "NOT 1M CHART", "#FF1744")
+
 -- ------------------------------------------------------------------
 -- Views 2 / 3: text line for the LAST CLOSED M5 / M15 bar, written one
 -- character every `dsp` bars. All values are captured on the first bar
