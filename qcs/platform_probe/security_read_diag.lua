@@ -27,7 +27,7 @@ instrument { name = "Security Read Diagnostic", short_name = "SEC-READ", overlay
 input_group {
     "Diagnostic",
     tf_sel   = input (2, "TF 1=1m 2=5m 3=15m", input.integer, 1, 3),
-    mode     = input (1, "Show 1=TypesA 2=TypesB 3=Prices 4=Times 5=Lines 6=Inspect close 7=Inspect open_time", input.integer, 1, 7),
+    mode     = input (1, "Show 1=TypesA 2=TypesB 3=Prices 4=Times 5=Lines 6=Inspect close 7=Inspect open_time 8=Keys close 9=Keys metatable 10=Keys close[1] 11=Chart close", input.integer, 1, 11),
     dsp      = input (2, "Bars per character", input.integer, 1, 20),
     do_print = input (1, "Print log 1=on 0=off", input.integer, 0, 1)
 }
@@ -185,7 +185,7 @@ local YN = { "Y", "N", "NA" }
 -- part goes through hold(), which keeps the value of the first bar of
 -- the cycle, so all characters of one line come from the same bar.
 -- ------------------------------------------------------------------
-local CYC = 100                              -- characters per line
+local CYC = (mode >= 8) and 200 or 120         -- characters per line
 local period = CYC * dsp
 local pos = (bar_no - 1) % period
 local start = pos == 0
@@ -252,6 +252,87 @@ elseif mode == 3 then
     value_of("C1", d.f.close, 1)
     value_of("H0", d.f.high, 0)
     value_of("L0", d.f.low, 0)
+elseif mode >= 8 then
+    -- Key listing with plain Lua pairs(): "KEY>TYPE" (number values are
+    -- shown, string values shown upper-cased, max 12 chars). Up to 8
+    -- entries. Text is not held across bars (keys are expected to be
+    -- stable); compare two screenshots if in doubt.
+    local function clean(x)
+        local t = string.upper(tostring(x))
+        t = t:gsub("[^0-9A-Z%.%-]", "_")
+        return t:sub(1, 12)
+    end
+    local function desc(v)
+        local tc = tcode(true, v)
+        if tc == 4 then
+            return fmtnum(kcode(true, v), num(v))
+        elseif tc == 5 then
+            return "S_" .. clean(v)
+        end
+        return TYPE_TXT[tc]
+    end
+    local function keys(obj, label)
+        add(label)
+        if obj == nil then
+            add("NIL")
+            return
+        end
+        add("T=" .. TYPE_TXT[tcode(true, obj)])
+        if type(obj) ~= "table" or type(pairs) ~= "function" then
+            return
+        end
+        local okl, err = try(function ()
+            local n = 0
+            for k, v in pairs(obj) do
+                n = n + 1
+                if n > 8 then
+                    add("MORE")
+                    break
+                end
+                add(clean(k) .. ">" .. desc(v))
+            end
+            if n == 0 then
+                add("EMPTY")
+            end
+        end)
+        if not okl then
+            add("PAIRS_ERR")
+        end
+    end
+    local fs = d.f.close.s
+    if mode == 8 then
+        keys(fs, "C")
+    elseif mode == 9 then
+        local mt = nil
+        if fs ~= nil and type(getmetatable) == "function" then
+            local okm, m = try(getmetatable, fs)
+            mt = okm and m or nil
+        end
+        keys(mt, "C_MT")
+    elseif mode == 10 then
+        local v1 = nil
+        if fs ~= nil then
+            local ok1, x = try(function () return fs[1] end)
+            v1 = ok1 and x or nil
+        end
+        keys(v1, "C[1]")
+    else
+        parts[1] = "CHART"
+        local iss = "NA"
+        if type(is_series) == "function" then
+            local oki, b = try(is_series, close)
+            iss = oki and (b and "Y" or "N") or "ERR"
+        end
+        local okn, n = try(function () return #close end)
+        add("IS=" .. iss .. " N=" .. ((okn and num(n)) and string.format("%.0f", n) or "NA"))
+        keys(close, "C")
+        local mt = nil
+        if type(getmetatable) == "function" then
+            local okm, m = try(getmetatable, close)
+            mt = okm and m or nil
+        end
+        add("MT=" .. ((mt ~= nil) and "Y" or "N"))
+    end
 elseif mode >= 6 then
     -- Inspect the field object itself with plain Lua (no QCS API):
     -- N = #field, MT = has a metatable, K/V = first pair from next(),
@@ -311,8 +392,9 @@ local line = table.concat(parts, " ")
 -- drawn at row y = 1 on the bar of that character. Space = no shape.
 -- ------------------------------------------------------------------
 local ALPHA = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", "=",
-    "/", ":", "A", "B", "C", "D", "E", "F", "H", "I", "K", "L", "M", "N",
-    "O", "R", "S", "T", "U", "V", "Y", "?" }
+    "/", ":", ">", "_", "[", "]", "?",
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" }
 local IDX = {}
 for i, c in ipairs(ALPHA) do
     IDX[c] = i
