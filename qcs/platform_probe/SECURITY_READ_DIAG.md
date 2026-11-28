@@ -56,20 +56,25 @@
 
 ผลที่ได้จะนำไปปิดตารางด้านล่าง
 
-## 5. ตารางสรุป M1/M5/M15 (อ่านได้หรือไม่)
+## 5. ตารางสรุป M1/M5/M15 (ผลจริงบน IQ Option, 2026-11-27/28)
 
-สถานะ ณ 2026-11-27: จากสคริปต์ `resolution_diag.lua` รู้แค่ว่า security เรียกได้ไม่ error และ close หรือ open_time ของทั้ง 3 TF **ไม่ใช่ตัวเลข** (รหัส NAN รวม close และ open_time ไว้ด้วยกัน) รายละเอียดราย field รอผลจากสคริปต์นี้
+ทดสอบบนแอปมือถือ (ทองคำ DIGITAL, XAUUSD OTC) และเว็บบนคอมพิวเตอร์ (XAUUSD OTC, Google OTC) บัญชี Demo
 
 | Field | M1 | M5 | M15 |
 |---|---|---|---|
-| ผลของ security (`R=`) | รอผล | รอผล | รอผล |
-| close [0] / [1] | รอผล | รอผล | รอผล |
-| open | รอผล | รอผล | รอผล |
-| high / low | รอผล | รอผล | รอผล |
-| volume | รอผล | รอผล | รอผล |
-| open_time [0] / [1] | รอผล | รอผล | รอผล |
-| close_time | รอผล | รอผล | รอผล |
-| เปลี่ยนเมื่อขึ้นแท่งใหม่ (CC / OTC) | รอผล | รอผล | รอผล |
-| แท่งที่อ่าน close ได้ (`OK=`) | รอผล | รอผล | รอผล |
+| ผลของ security (`R=`) | ไม่ได้ถ่ายภาพ | TBL (ไม่ error) | ไม่ error (จาก resolution_diag) |
+| close: ชนิด / is_series / [0] / [1] | table (จาก Show 6) / ไม่ได้ตรวจ | TBL / N / NIL / NIL | table (จาก Show 6) / ไม่ได้ตรวจ |
+| open, high, low | ไม่ได้ตรวจ | TBL / N / NIL / NIL ทุกตัว | ไม่ได้ตรวจ |
+| volume, open_time, close_time | ไม่ได้ตรวจ | ไม่ได้ตรวจ (resolution_diag: close หรือ open_time ไม่ใช่ตัวเลข) | เหมือน M5 |
+| ข้างใน close (Show 6) | N=1, MT=Y, K=NUM, [1]=OTH | N=1, MT=Y, K=NUM/STR, [1]=OTH | N=1, MT=Y, K=STR, [1]=OTH |
+| metatable ของ close (Show 9) | — | `__le __index __tostring __lt __sub __call __eq __unm` (ฟังก์ชัน) และอื่น ๆ | — |
+
+**close ของกราฟเอง (Show 11)**: table, `is_series` = **N**, `#` = 0, มี key `resolution`, `data_provider` (ฟังก์ชัน), `get_current_...` (ฟังก์ชัน) แต่ `get_value(close)` อ่านราคาได้ปกติ
+
+**ข้อสรุปจากหลักฐาน**
+1. `is_series()` ตอบ N แม้กับ series ของกราฟที่ใช้งานได้ จึงใช้แยก series ไม่ได้บนแพลตฟอร์มนี้
+2. `security()` คืนวัตถุ series แบบเดียวกับของกราฟ แต่ `get_value` ได้ nil ทั้ง [0] และ [1] คือ **ไม่มีข้อมูลราคา M5/M15 ให้อ่านด้วยวิธีที่มีในเอกสาร**
+3. `resolution` เป็นตัวเลข ไม่ใช่ข้อความตามเอกสาร
+4. ราคาและเวลาของกราฟ (M1) อ่านได้เป็นตัวเลข
 
 **ห้ามสรุปว่า MTF ผ่าน** จนกว่า M5/M15 close จะเป็น NUM จริงบน IQ Option และผ่าน Test Plan เดิม (T1–T6)
